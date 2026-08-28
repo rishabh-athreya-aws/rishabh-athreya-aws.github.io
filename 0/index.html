@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f8f6f1">
-    <meta name="description" content="Rishabh Athreya's CS 180 course portfolio.">
-    <title>Rishabh Athreya — CS 180</title>
+    <meta name="description" content="Project 0 for Rishabh Athreya's CS 180 course portfolio.">
+    <title>Project 0 — Rishabh Athreya</title>
 
     <style>
         :root {
@@ -18,8 +18,6 @@
         }
 
         * { box-sizing: border-box; }
-
-        html { scroll-behavior: smooth; }
 
         body {
             margin: 0;
@@ -41,7 +39,8 @@
             text-decoration: none;
         }
 
-        a:focus-visible {
+        a:focus-visible,
+        video:focus-visible {
             outline: 2px solid var(--blue);
             outline-offset: 4px;
             border-radius: 2px;
@@ -78,78 +77,69 @@
             font-variant-numeric: tabular-nums;
         }
 
-        main {
-            padding: clamp(3rem, 8vw, 4.5rem) 0 clamp(5rem, 12vw, 7rem);
+        main { padding: clamp(3rem, 8vw, 4.5rem) 0 6rem; }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1.2rem;
+            color: var(--blue);
+            font-size: 0.8rem;
+            font-weight: 650;
         }
 
-        .section-header {
-            display: flex;
-            align-items: baseline;
-            justify-content: space-between;
-            gap: 1rem;
-            margin-bottom: 0.65rem;
+        .back-link:hover { color: var(--ink); }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(2.4rem, 7vw, 4rem);
+            font-weight: 600;
+            letter-spacing: -0.055em;
+            line-height: 1;
+        }
+
+        .parts {
+            margin-top: clamp(3.5rem, 9vw, 5.5rem);
+            border-top: 1px solid var(--rule);
+        }
+
+        .part {
+            display: grid;
+            grid-template-columns: 5rem minmax(0, 1fr);
+            gap: 1.5rem;
+            padding: 2rem 0 2.25rem;
+            border-bottom: 1px solid var(--rule);
         }
 
         h2 {
             margin: 0;
-            font-size: 0.77rem;
+            font-size: 0.78rem;
             font-weight: 700;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.08em;
+            line-height: 1.5;
             text-transform: uppercase;
         }
 
-        .count {
-            color: var(--muted);
-            font-size: 0.78rem;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .project-list {
+        .part-content p {
             margin: 0;
-            padding: 0;
-            border-top: 1px solid var(--rule);
-            list-style: none;
-        }
-
-        .project-link {
-            display: grid;
-            grid-template-columns: 3rem minmax(0, 1fr) auto;
-            align-items: center;
-            gap: 1rem;
-            padding: 1.4rem 0 1.5rem;
-            border-bottom: 1px solid var(--rule);
-            transition: color 160ms ease, padding 160ms ease;
-        }
-
-        .project-link:hover {
-            padding-left: 0.3rem;
-            color: var(--blue);
-        }
-
-        .project-number {
             color: var(--muted);
-            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-            font-size: 0.72rem;
-            font-variant-numeric: tabular-nums;
         }
 
-        .project-title {
+        .media-frame {
+            margin: 0;
+        }
+
+        video {
             display: block;
-            font-size: clamp(1.15rem, 3vw, 1.35rem);
-            font-weight: 600;
-            letter-spacing: -0.025em;
-            line-height: 1.25;
+            width: 100%;
+            height: auto;
+            margin: 0;
+            background: #111;
+            border: 1px solid var(--rule);
         }
 
-        .arrow {
-            color: var(--blue);
-            font-size: 1.15rem;
-            line-height: 1;
-            transition: transform 160ms ease;
-        }
-
-        .project-link:hover .arrow {
-            transform: translate(0.2rem, -0.2rem);
+        .media-description {
+            margin-top: 1rem !important;
+            color: var(--ink) !important;
         }
 
         .site-footer {
@@ -175,9 +165,9 @@
 
             main { padding-top: 2.5rem; }
 
-            .project-link {
-                grid-template-columns: 2rem minmax(0, 1fr) auto;
-                gap: 0.7rem;
+            .part {
+                grid-template-columns: 1fr;
+                gap: 0.8rem;
             }
 
             .site-footer {
@@ -188,8 +178,6 @@
         }
 
         @media (prefers-reduced-motion: reduce) {
-            html { scroll-behavior: auto; }
-
             *,
             *::before,
             *::after {
@@ -202,32 +190,51 @@
 <body>
     <div class="page">
         <header class="site-header">
-            <a class="name" href="index.html" aria-label="Rishabh Athreya, reload home page">Rishabh Athreya</a>
+            <a class="name" href="../index.html" aria-label="Rishabh Athreya, home">Rishabh Athreya</a>
             <span class="course-mark">CS 180</span>
         </header>
 
         <main>
-            <section class="projects" aria-labelledby="projects-title">
-                <div class="section-header">
-                    <h2 id="projects-title">Projects</h2>
-                    <span class="count" aria-label="1 project">01 project</span>
-                </div>
+            <a class="back-link" href="../index.html">← All projects</a>
+            <h1>Project 0</h1>
 
-                <ol class="project-list">
-                    <li>
-                        <a class="project-link" href="./0/index.html">
-                            <span class="project-number" aria-hidden="true">00</span>
-                            <span class="project-title">Project 0</span>
-                            <span class="arrow" aria-hidden="true">↗</span>
-                        </a>
-                    </li>
-                </ol>
-            </section>
+            <div class="parts">
+                <section class="part" aria-labelledby="part-1-title">
+                    <h2 id="part-1-title">Part 1</h2>
+                    <div class="part-content">
+                        <p>TODO</p>
+                    </div>
+                </section>
+
+                <section class="part" aria-labelledby="part-2-title">
+                    <h2 id="part-2-title">Part 2</h2>
+                    <div class="part-content">
+                        <p>TODO</p>
+                    </div>
+                </section>
+
+                <section class="part" aria-labelledby="part-3-title">
+                    <h2 id="part-3-title">Part 3</h2>
+                    <div class="part-content">
+                        <figure class="media-frame">
+                            <video controls playsinline preload="metadata">
+                                <source src="../media/project0/ra_dolly_shot.mp4" type="video/mp4">
+                                Your browser does not support embedded video.
+                            </video>
+                            <p class="media-description">
+                                Note: Rather than stitching together only a few images, I tried to record the
+                                zoom (effectively simulating many many images, rather than just 4-8) for a
+                                smoother shot.
+                            </p>
+                        </figure>
+                    </div>
+                </section>
+            </div>
         </main>
 
         <footer class="site-footer">
             <p>Rishabh Athreya</p>
-            <p>Computer vision coursework</p>
+            <p>Project 0</p>
         </footer>
     </div>
 </body>
