@@ -124,6 +124,33 @@
             color: var(--muted);
         }
 
+        .image-pair {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .image-pair figure {
+            min-width: 0;
+            margin: 0;
+        }
+
+        .image-pair img {
+            display: block;
+            width: 100%;
+            height: auto;
+            border: 1px solid var(--rule);
+        }
+
+        .image-pair figcaption {
+            margin-top: 0.55rem;
+            color: var(--muted);
+            font-size: 0.78rem;
+            line-height: 1.4;
+            text-align: center;
+        }
+
         .media-frame {
             margin: 0;
         }
@@ -202,14 +229,32 @@
                 <section class="part" aria-labelledby="part-1-title">
                     <h2 id="part-1-title">Part 1</h2>
                     <div class="part-content">
-                        <p>TODO</p>
+                        <div class="image-pair">
+                            <figure>
+                                <img src="../media/project0/part1/selfie_close.png" alt="Selfie taken from close up" loading="lazy" decoding="async">
+                                <figcaption>Figure 1: close up portrait</figcaption>
+                            </figure>
+                            <figure>
+                                <img src="../media/project0/part1/selfie_far.png" alt="Selfie taken from farther away" loading="lazy" decoding="async">
+                                <figcaption>Figure 2: far back, zoomed portrait</figcaption>
+                            </figure>
+                        </div>
                     </div>
                 </section>
 
                 <section class="part" aria-labelledby="part-2-title">
                     <h2 id="part-2-title">Part 2</h2>
                     <div class="part-content">
-                        <p>TODO</p>
+                        <div class="image-pair">
+                            <figure>
+                                <img src="../media/project0/part2/close.png" alt="Close view" loading="lazy" decoding="async">
+                                <figcaption>Figure 1: close up building shot</figcaption>
+                            </figure>
+                            <figure>
+                                <img src="../media/project0/part2/far.png" alt="Far view" loading="lazy" decoding="async">
+                                <figcaption>Figure 2: far back, zoomed building shot</figcaption>
+                            </figure>
+                        </div>
                     </div>
                 </section>
 
@@ -218,7 +263,7 @@
                     <div class="part-content">
                         <figure class="media-frame">
                             <video controls playsinline preload="metadata">
-                                <source src="../media/project0/ra_dolly_shot.mp4" type="video/mp4">
+                                <source src="../media/project0/part3/ra_dolly_shot.mp4" type="video/mp4">
                                 Your browser does not support embedded video.
                             </video>
                             <p class="media-description">
