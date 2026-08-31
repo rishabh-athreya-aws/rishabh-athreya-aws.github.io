@@ -124,6 +124,19 @@
             color: var(--muted);
         }
 
+        .reflection {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .reflection .part-content {
+            max-width: 42rem;
+        }
+
+        .reflection .part-content p + p {
+            margin-top: 1rem;
+        }
+
         .image-pair {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -255,6 +268,28 @@
                                 <figcaption>Figure 2: far back, zoomed building shot</figcaption>
                             </figure>
                         </div>
+                    </div>
+                </section>
+
+                <section class="part reflection" aria-labelledby="reflection-title">
+                    <h2 id="reflection-title">Parts 1 + 2 Reflection</h2>
+                    <div class="part-content">
+                        <p>
+                            Coarsely, it seems that for a given camera configuration, when the camera is
+                            close to the subject, the angles formed by individual features to the camera
+                            are less parallel. As the camera moves further, these rays approach being
+                            parallel.
+                        </p>
+                        <p>
+                            In the close configuration, rays at the perimeter are more parallel, and
+                            features there appear closer together. Rays near the center of the field of
+                            view are less parallel and therefore appear further apart.
+                        </p>
+                        <p>
+                            In the far configuration, groups rays at the perimeter and center of the FOV are
+                            separated by very similar angles, so the observed distances between features
+                            are closer to their true distances and we see a less distorted view.
+                        </p>
                     </div>
                 </section>
 
