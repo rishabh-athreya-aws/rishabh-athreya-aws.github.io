@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f8f6f1">
+    <meta name="description" content="Images of the Russian Empire: colorizing the Prokudin-Gorskii collection. Project 1 by Rishabh Athreya.">
+    <title>Images of the Russian Empire — Rishabh Athreya</title>
+
+    <style>
+        :root {
+            --paper: #f8f6f1;
+            --ink: #191919;
+            --muted: #696760;
+            --rule: #d8d3c9;
+            --blue: #315a8a;
+            --selection: #dce7f2;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--paper);
+            color: var(--ink);
+            font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont,
+                "Segoe UI", Helvetica, Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        ::selection { background: var(--selection); }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        a:focus-visible,
+        video:focus-visible {
+            outline: 2px solid var(--blue);
+            outline-offset: 4px;
+            border-radius: 2px;
+        }
+
+        .page {
+            width: min(100% - 2.5rem, 48rem);
+            margin-inline: auto;
+            padding: 2.25rem 0 2rem;
+        }
+
+        .site-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--rule);
+        }
+
+        .name,
+        .course-mark {
+            font-size: 0.95rem;
+            font-weight: 650;
+            letter-spacing: -0.01em;
+        }
+
+        .name { transition: color 160ms ease; }
+
+        .name:hover { color: var(--blue); }
+
+        .course-mark {
+            color: var(--muted);
+            font-variant-numeric: tabular-nums;
+        }
+
+        main { padding: clamp(3rem, 8vw, 4.5rem) 0 2.5rem; }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1.2rem;
+            color: var(--blue);
+            font-size: 0.8rem;
+            font-weight: 650;
+        }
+
+        .back-link:hover { color: var(--ink); }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(2.4rem, 7vw, 4rem);
+            font-weight: 600;
+            letter-spacing: -0.055em;
+            line-height: 1;
+        }
+
+        .project-label {
+            margin: 0 0 1rem;
+            color: var(--muted);
+            font-size: 0.77rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .project-subtitle {
+            margin: 1.5rem 0 0;
+            color: var(--muted);
+            max-width: 36rem;
+        }
+
+        main { min-height: 65vh; }
+        h1 { line-height: 1.08; text-wrap: balance; }
+
+        .site-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding-top: 1rem;
+            color: var(--muted);
+            font-size: 0.76rem;
+        }
+
+        .site-footer p { margin: 0; }
+
+        @media (max-width: 36rem) {
+            .page {
+                width: min(100% - 2rem, 48rem);
+                padding-top: 1.25rem;
+            }
+
+            .site-header { padding-bottom: 0.8rem; }
+
+            main { padding-top: 2.5rem; }
+
+            .site-footer {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 0.15rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        .results-section { margin-top: clamp(3rem, 8vw, 5rem); padding-top: 2rem; border-top: 1px solid var(--rule); }
+        .results-section h2 { margin: 0 0 0.4rem; font-size: 1.35rem; font-weight: 600; letter-spacing: -0.025em; }
+        .offset-convention { margin: 0 0 1.5rem; color: var(--muted); font-size: 0.8rem; }
+        .results-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+        .result { margin: 0; min-width: 0; }
+        .result img { display: block; width: 100%; height: auto; border: 1px solid var(--rule); }
+        .result figcaption { margin-top: 0.8rem; text-align: center; font-size: 0.85rem; }
+        .result-name { display: block; font-weight: 600; }
+        .result-offset { display: block; color: var(--muted); font-variant-numeric: tabular-nums; }
+        @media (max-width: 36rem) {
+            .results-grid { grid-template-columns: 1fr; gap: 2rem; }
+            .result { width: min(100%, 22rem); margin-inline: auto; }
+        }
+
+        .method-section p { margin: 1rem 0; }
+        .method-section h3 { margin: 2rem 0 0.5rem; font-size: 1.05rem; font-weight: 600; }
+        .metric-formula {
+            margin: 1.5rem 0;
+            padding: 1.5rem 1rem;
+            border: 1px solid var(--rule);
+            text-align: center;
+            overflow-x: auto;
+        }
+        .metric-formula math {
+            font-family: "STIX Two Math", "Cambria Math", math;
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
+        }
+        .metric-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1.5rem 0 2rem; }
+        @media (max-width: 36rem) {
+            .metric-pair { grid-template-columns: 1fr; gap: 1.5rem; }
+        }
+        .project-introduction { margin-top: 2rem; }
+        .project-introduction p { margin: 1rem 0; }
+
+        .results-table-wrap { margin-top: 1.5rem; overflow-x: auto; }
+        .results-table-wrap:focus-visible { outline: 2px solid var(--blue); outline-offset: 4px; }
+        .results-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+        .results-table caption { padding-bottom: 0.8rem; text-align: left; font-weight: 600; font-size: 0.95rem; }
+        .results-table th, .results-table td { padding: 0.75rem 0.6rem; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+        .results-table thead th { border-top: 1px solid var(--rule); font-weight: 600; }
+        .results-table th:first-child { text-align: left; }
+        .results-table tbody th { font-weight: 500; white-space: normal; }
+        .results-table a { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; }
+        .result-note { display: block; color: var(--muted); font-size: 0.72rem; }
+        @media print {
+            .results-table-wrap { overflow: visible; }
+            .results-table { font-size: 9pt; }
+            .results-table tr { break-inside: avoid; }
+            .results-table thead { display: table-header-group; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <header class="site-header">
+            <a class="name" href="../index.html" aria-label="Rishabh Athreya, home">Rishabh Athreya</a>
+            <span class="course-mark">CS 180</span>
+        </header>
+
+        <main>
+            <a class="back-link" href="../index.html">← All projects</a>
+            <p class="project-label">Project 1</p>
+            <h1>Images of the Russian Empire</h1>
+            <p class="project-subtitle">Colorizing the Prokudin-Gorskii photo collection</p>
+            <div class="project-introduction">
+                <p>Sergei Prokudin-Gorskii captured color photographs by taking three separate
+                    exposures of a scene through blue, green, and red filters. The digitized glass
+                    plates contain these exposures as three vertically stacked grayscale images.
+                    Simply assigning them to their color channels produces colored fringes and
+                    doubled features because the exposures are not perfectly aligned.</p>
+                <p>The goal of this project is to automatically reconstruct a single color image.
+                    I split each scan into its three channels, hold blue fixed, and search for the
+                    horizontal and vertical shifts that align green and red with it.</p>
+                <p>This involves two key decisions, outlined below: <strong>how to measure
+                    the quality of a match</strong> (L2 distance vs. NCC) and <strong>how to search for the
+                    alignment</strong> (single-scale vs. multi-scale).</p>
+            </div>
+
+            <section class="results-section" aria-labelledby="single-scale-title">
+                <h2 id="single-scale-title">Single-scale alignment results</h2>
+                <p class="offset-convention">Offsets (x, y) in pixels, relative to the blue channel.</p>
+                <div class="results-grid">
+                    <figure class="result">
+                        <img src="../media/project1/single-scale/cathedral.jpg" alt="Cathedral aligned using single-scale NCC" width="390" height="341" decoding="async">
+                        <figcaption>
+                            <span class="result-name">Cathedral</span>
+                            <span class="result-offset">R (3, 12)</span>
+                            <span class="result-offset">G (2, 5)</span>
+                        </figcaption>
+                    </figure>
+                    <figure class="result">
+                        <img src="../media/project1/single-scale/monastery.jpg" alt="Monastery aligned using single-scale NCC" width="391" height="341" decoding="async">
+                        <figcaption>
+                            <span class="result-name">Monastery</span>
+                            <span class="result-offset">R (2, 3)</span>
+                            <span class="result-offset">G (2, -3)</span>
+                        </figcaption>
+                    </figure>
+                    <figure class="result">
+                        <img src="../media/project1/single-scale/tobolsk.jpg" alt="Tobolsk aligned using single-scale NCC" width="396" height="341" decoding="async">
+                        <figcaption>
+                            <span class="result-name">Tobolsk</span>
+                            <span class="result-offset">R (3, 6)</span>
+                            <span class="result-offset">G (2, 3)</span>
+                        </figcaption>
+                    </figure>
+                </div>
+            </section>
+
+            <section class="results-section method-section" aria-labelledby="metric-choice-title">
+                <h2 id="metric-choice-title">L2 vs. normalized cross-correlation (NCC)</h2>
+                <p><strong>L2 distance</strong> compares pixel intensities directly. For two
+                    candidate image interiors A and B, it squares each pixel difference,
+                    sums the differences, and takes the square root. A smaller value is better.</p>
+                <div class="metric-formula">
+                    <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" aria-label="L2 of A and B equals the square root of the sum over i and j of A i j minus B i j squared">
+                        <mrow>
+                            <msub><mi mathvariant="normal">L</mi><mn>2</mn></msub>
+                            <mo stretchy="false">(</mo><mi>A</mi><mo>,</mo><mi>B</mi><mo stretchy="false">)</mo><mo>=</mo>
+                            <msqrt>
+                                <mrow>
+                                    <munder><mo>∑</mo><mrow><mi>i</mi><mo>,</mo><mi>j</mi></mrow></munder>
+                                    <msup>
+                                        <mrow><mo>(</mo>
+                                            <msub><mi>A</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>−</mo>
+                                            <msub><mi>B</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub>
+                                            <mo>)</mo>
+                                        </mrow>
+                                        <mn>2</mn>
+                                    </msup>
+                                </mrow>
+                            </msqrt>
+                        </mrow>
+                    </math>
+                </div>
+                <p>Large intensity differences contribute strongly to this score. However,
+                    corresponding objects can have different brightness through different color
+                    filters, even when their positions are correctly aligned.</p>
+                <p><strong>NCC</strong> subtracts each image’s mean, divides by the magnitude
+                    of its centered values, and takes their dot product. Here Ā and B̄ denote
+                    the mean intensities, and the images are treated as vectors.</p>
+                <div class="metric-formula">
+                    <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" aria-label="NCC of A and B equals the dot product of their mean-centered values divided by the product of their L2 norms">
+                        <mrow>
+                            <mi mathvariant="normal">NCC</mi><mo stretchy="false">(</mo><mi>A</mi><mo>,</mo><mi>B</mi><mo stretchy="false">)</mo><mo>=</mo>
+                            <mfrac>
+                                <mrow><mrow><mo>(</mo><mi>A</mi><mo>−</mo><mover accent="true"><mi>A</mi><mo>¯</mo></mover><mo>)</mo></mrow><mo>·</mo><mrow><mo>(</mo><mi>B</mi><mo>−</mo><mover accent="true"><mi>B</mi><mo>¯</mo></mover><mo>)</mo></mrow></mrow>
+                                <mrow><msub><mrow><mo>‖</mo><mi>A</mi><mo>−</mo><mover accent="true"><mi>A</mi><mo>¯</mo></mover><mo>‖</mo></mrow><mn>2</mn></msub><mo>⁢</mo><msub><mrow><mo>‖</mo><mi>B</mi><mo>−</mo><mover accent="true"><mi>B</mi><mo>¯</mo></mover><mo>‖</mo></mrow><mn>2</mn></msub></mrow>
+                            </mfrac>
+                        </mrow>
+                    </math>
+                </div>
+                <p>Mean subtraction removes a uniform brightness offset; normalization removes
+                    an overall positive contrast scaling. NCC therefore compares relative
+                    intensity patterns. Higher correlation is better, so my code minimizes
+                    <strong>1 − NCC</strong> to use the same minimum-score search as L2.</p>
+                <p><strong>I chose NCC</strong> for its tolerance to these brightness and contrast
+                    differences. With single-scale search, L2 and NCC gave identical offsets on
+                    cathedral, monastery, and tobolsk. With the same pyramid parameters, however,
+                    L2 misaligned cathedral and church while NCC aligned their main features.</p>
+                <h3>Church: matching intensity versus matching position</h3>
+                <p>L2 produced large horizontal shifts and a visibly duplicated church. NCC
+                    aligned the building and shoreline. This is consistent with L2’s sensitivity
+                    to channel-dependent intensities: broad areas such as sky and water can
+                    strongly influence the score. NCC reduces the effect of overall brightness
+                    and contrast differences. All offsets below are (x, y), relative to blue.</p>
+                <div class="metric-pair">
+                    <figure class="result">
+                        <img src="../media/project1/metric-comparison/church_l2.jpg" alt="Church duplicated across color channels after pyramid L2 alignment" width="900" height="793" loading="lazy" decoding="async">
+                        <figcaption><span class="result-name">L2</span><span class="result-offset">R (635, 73)</span><span class="result-offset">G (635, 44)</span></figcaption>
+                    </figure>
+                    <figure class="result">
+                        <img src="../media/project1/metric-comparison/church_ncc.jpg" alt="Church and shoreline aligned using pyramid NCC" width="900" height="793" loading="lazy" decoding="async">
+                        <figcaption><span class="result-name">NCC</span><span class="result-offset">R (−4, 58)</span><span class="result-offset">G (4, 25)</span></figcaption>
+                    </figure>
+                </div>
+                <h3>Cathedral: a wrong coarse estimate</h3>
+                <p>Pyramid L2 shifted red by (75, 11), producing displaced red details and color
+                    fringes. NCC found (3, 12). Unlike exhaustive single-scale search, the pyramid
+                    only refines near its coarse estimate, so an early mistake can leave the
+                    correct shift outside the refinement window.</p>
+                <div class="metric-pair">
+                    <figure class="result">
+                        <img src="../media/project1/metric-comparison/cathedral_l2.jpg" alt="Cathedral with the red channel visibly displaced by pyramid L2" width="390" height="341" loading="lazy" decoding="async">
+                        <figcaption><span class="result-name">L2</span><span class="result-offset">R (75, 11)</span></figcaption>
+                    </figure>
+                    <figure class="result">
+                        <img src="../media/project1/metric-comparison/cathedral_ncc.jpg" alt="Cathedral with architectural features aligned by pyramid NCC" width="390" height="341" loading="lazy" decoding="async">
+                        <figcaption><span class="result-name">NCC</span><span class="result-offset">R (3, 12)</span></figcaption>
+                    </figure>
+                </div>
+                <p>NCC is not invariant to every color-channel difference. In particular,
+                    objects can reverse their relative brightness between exposures.
+                    Emir’s robe is one example, and his red channel remains misaligned in my
+                    NCC results below. Matching gradients or edges would be a possible extension.</p>
+            </section>
+
+            <section class="results-section" aria-labelledby="multi-scale-title">
+                <h2 id="multi-scale-title">Multi-scale pyramid alignment results</h2>
+                <p class="offset-convention">Offsets (x, y) in pixels, relative to the blue channel.</p>
+                <div class="results-grid">
+                    <figure class="result">
+                        <a href="../media/project1/multi-scale/cathedral.jpg" aria-label="View Cathedral at full resolution">
+                            <img src="../media/project1/multi-scale/cathedral.jpg" alt="Cathedral — multi-scale NCC result" width="390" height="341" loading="lazy" decoding="async">
+                        </a>
+                        <figcaption>
+                            <span class="result-name">Cathedral</span>
+                            <span class="result-offset">R (3, 12)</span>
+                            <span class="result-offset">G (2, 5)</span>
+                        </figcaption>
+                    </figure>
+                    <figure class="result">
+                        <a href="../media/project1/multi-scale/church.jpg" aria-label="View Church at full resolution">
+                            <img src="../media/project1/multi-scale/church.jpg" alt="Church — multi-scale NCC result" width="3634" height="3202" loading="lazy" decoding="async">
+                        </a>
+                        <figcaption>
+                            <span class="result-name">Church</span>
+                            <span class="result-offset">R (-4, 58)</span>
+                            <span class="result-offset">G (4, 25)</span>
+                        </figcaption>
+                    </figure>
+                    <figure class="result">
+                        <a href="../media/project1/multi-scale/emir.jpg" aria-label="View Emir at full resolution">
+                            <img src="../media/project1/multi-scale/emir.jpg" alt="Emir — multi-scale NCC result" width="3702" height="3209" loading="lazy" decoding="async">
+                        </a>
+                        <figcaption>
+                            <span class="result-name">Emir</span>
+                            <span class="result-offset">R (-483, -181)</span>
+                            <span class="result-offset">G (24, 49)</span>
+                        </figcaption>
+                    </figure>
+                    <figure class="result">
+                        <a href="../media/project1/multi-scale/harvesters.jpg" aria-label="View Harvesters at full resolution">
+                            <img src="../media/project1/multi-scale/harvesters.jpg" alt="Harvesters — multi-scale NCC result" width="3683" height="3218" loading="lazy" decoding="async">
+                        </a>
+                        <figcaption>
+                            <span class="result-name">Harvesters</span>
+                            <span class="result-offset">R (14, 124)</span>
+                            <span class="result-offset">G (17, 60)</span>
+                        </figcaption>
+                    </figure>
+                    <figure class="result">
+                        <a href="../media/project1/multi-scale/icon.jpg" aria-label="View Icon at full resolution">
+                            <img src="../media/project1/multi-scale/icon.jpg" alt="Icon — multi-scale NCC result" width="3741" height="3244" loading="lazy" decoding="async">
+                        </a>
+                        <figcaption>
+                            <span class="result-name">Icon</span>
+                            <span class="result-offset">R (23, 89)</span>
+                            <span class="result-offset">G (17, 41)</span>
+                        </figcaption>
+                    </figure>
+                    <figure class="result">
+                        <a href="../media/project1/multi-scale/ilemselga.jpg" aria-label="View Ilemselga at full resolution">
+                            <img src="../media/project1/multi-scale/ilemselga.jpg" alt="Ilemselga — multi-scale NCC result" width="3800" height="3270" loading="lazy" decoding="async">
+                        </a>
+                        <figcaption>
+                            <span class="result-name">Ilemselga</span>
+                            <span class="result-offset">R (11, 130)</span>
+                            <span class="result-offset">G (7, 40)</span>
+                        </figcaption>
+                    </figure>
+                    <figure class="result">
+                        <a href="../media/project1/multi-scale/melons.jpg" aria-label="View Melons at full resolution">
+                            <img src="../media/project1/multi-scale/melons.jpg" alt="Melons — multi-scale NCC result" width="3770" height="3241" loading="lazy" decoding="async">
+                        </a>
+                        <figcaption>
+                            <span class="result-name">Melons</span>
+                            <span class="result-offset">R (13, 178)</span>
+                            <span class="result-offset">G (10, 81)</span>
+                        </figcaption>
+                    </figure>
+                    <figure class="result">
+                        <a href="../media/project1/multi-scale/monastery.jpg" aria-label="View Monastery at full resolution">
+                            <img src="../media/project1/multi-scale/monastery.jpg" alt="Monastery — multi-scale NCC result" width="391" height="341" loading="lazy" decoding="async">
+                        </a>
+                        <figcaption>
+                            <span class="result-name">Monastery</span>
+                            <span class="result-offset">R (2, 3)</span>
+                            <span class="result-offset">G (2, -3)</span>
+                        </figcaption>
+                    </figure>
+                    <figure class="result">
+                        <a href="../media/project1/multi-scale/religous_painting.jpg" aria-label="View Religious painting at full resolution">
+                            <img src="../media/project1/multi-scale/religous_painting.jpg" alt="Religious painting — multi-scale NCC result" width="3742" height="3193" loading="lazy" decoding="async">
+                        </a>
+                        <figcaption>
+                            <span class="result-name">Religious painting</span>
+                            <span class="result-offset">R (7, 68)</span>
+                            <span class="result-offset">G (3, 28)</span>
+                        </figcaption>
+                    </figure>
+                    <figure class="result">
+                        <a href="../media/project1/multi-scale/self_portrait.jpg" aria-label="View Self portrait at full resolution">
+                            <img src="../media/project1/multi-scale/self_portrait.jpg" alt="Self portrait — multi-scale NCC result" width="3810" height="3251" loading="lazy" decoding="async">
+                        </a>
+                        <figcaption>
+                            <span class="result-name">Self portrait</span>
+                            <span class="result-offset">R (37, 176)</span>
+                            <span class="result-offset">G (29, 79)</span>
+                        </figcaption>
+                    </figure>
+                    <figure class="result">
+                        <a href="../media/project1/multi-scale/siren.jpg" aria-label="View Siren at full resolution">
+                            <img src="../media/project1/multi-scale/siren.jpg" alt="Siren — multi-scale NCC result" width="3817" height="3250" loading="lazy" decoding="async">
+                        </a>
+                        <figcaption>
+                            <span class="result-name">Siren</span>
+                            <span class="result-offset">R (-25, 96)</span>
+                            <span class="result-offset">G (-6, 49)</span>
+                        </figcaption>
+                    </figure>
+                    <figure class="result">
+                        <a href="../media/project1/multi-scale/three_generations.jpg" aria-label="View Three generations at full resolution">
+                            <img src="../media/project1/multi-scale/three_generations.jpg" alt="Three generations — multi-scale NCC result" width="3714" height="3209" loading="lazy" decoding="async">
+                        </a>
+                        <figcaption>
+                            <span class="result-name">Three generations</span>
+                            <span class="result-offset">R (11, 111)</span>
+                            <span class="result-offset">G (14, 53)</span>
+                        </figcaption>
+                    </figure>
+                    <figure class="result">
+                        <a href="../media/project1/multi-scale/tobolsk.jpg" aria-label="View Tobolsk at full resolution">
+                            <img src="../media/project1/multi-scale/tobolsk.jpg" alt="Tobolsk — multi-scale NCC result" width="396" height="341" loading="lazy" decoding="async">
+                        </a>
+                        <figcaption>
+                            <span class="result-name">Tobolsk</span>
+                            <span class="result-offset">R (3, 6)</span>
+                            <span class="result-offset">G (3, 3)</span>
+                        </figcaption>
+                    </figure>
+                    <figure class="result">
+                        <a href="../media/project1/multi-scale/wharf.jpg" aria-label="View Wharf at full resolution">
+                            <img src="../media/project1/multi-scale/wharf.jpg" alt="Wharf — multi-scale NCC result" width="3761" height="3244" loading="lazy" decoding="async">
+                        </a>
+                        <figcaption>
+                            <span class="result-name">Wharf</span>
+                            <span class="result-offset">R (-16, 83)</span>
+                            <span class="result-offset">G (-7, 15)</span>
+                        </figcaption>
+                    </figure>
+                    <figure class="result">
+                        <a href="../media/project1/multi-scale/liesnaia_doroga.jpg" aria-label="View Liesnaia doroga at full resolution">
+                            <img src="../media/project1/multi-scale/liesnaia_doroga.jpg" alt="Liesnaia doroga — multi-scale NCC result" width="3762" height="3235" loading="lazy" decoding="async">
+                        </a>
+                        <figcaption>
+                            <span class="result-name">Liesnaia doroga</span>
+                            <span class="result-offset">From the Prokudin-Gorskii collection</span>
+                            <span class="result-offset">R (7, 97)</span>
+                            <span class="result-offset">G (-32, 37)</span>
+                        </figcaption>
+                    </figure>
+                    <figure class="result">
+                        <a href="../media/project1/multi-scale/na_dunaie.jpg" aria-label="View Na dunaie at full resolution">
+                            <img src="../media/project1/multi-scale/na_dunaie.jpg" alt="Na dunaie — multi-scale NCC result" width="3739" height="3237" loading="lazy" decoding="async">
+                        </a>
+                        <figcaption>
+                            <span class="result-name">Na dunaie</span>
+                            <span class="result-offset">From the Prokudin-Gorskii collection</span>
+                            <span class="result-offset">R (101, 85)</span>
+                            <span class="result-offset">G (51, 33)</span>
+                        </figcaption>
+                    </figure>
+                    <figure class="result">
+                        <a href="../media/project1/multi-scale/v_oranzhereie.jpg" aria-label="View V oranzhereie at full resolution">
+                            <img src="../media/project1/multi-scale/v_oranzhereie.jpg" alt="V oranzhereie — multi-scale NCC result" width="3817" height="3260" loading="lazy" decoding="async">
+                        </a>
+                        <figcaption>
+                            <span class="result-name">V oranzhereie</span>
+                            <span class="result-offset">From the Prokudin-Gorskii collection</span>
+                            <span class="result-offset">R (35, 126)</span>
+                            <span class="result-offset">G (28, 60)</span>
+                        </figcaption>
+                    </figure>
+                </div>
+            </section>
+
+            <section class="results-section method-section" aria-labelledby="search-choice-title">
+                <h2 id="search-choice-title">Single-scale vs. multi-scale alignment</h2>
+                <p><strong>Single-scale alignment</strong> searches at the original resolution.
+                    I try every horizontal and vertical displacement in [−15, 15], giving 961
+                    candidates per channel, and keep the shift with the best score. This works for
+                    the small JPEGs, where the required shifts fit inside that window. I exclude
+                    a 15-pixel margin when scoring so pixels wrapped by the shift do not affect the match.</p>
+                <p><strong>Multi-scale alignment</strong> handles the larger displacements in the
+                    full-resolution TIFFs. Widening the original search would require evaluating
+                    many more candidates over millions of pixels. Instead, I recursively halve
+                    both images with antialiased resizing (blurs the image before downsampling to prevent fine details from turning into false patterns) until the smaller dimension is below
+                    128 pixels. At this base case, we use naive alignment to find a starting shift,
+                    and as these results propagate back up the tree, each function call then refines
+                    the estimated shift with a much smaller search window.</p>
+                <p>At each finer level, I double the estimated shift and refine it within a
+                    [−5, 5] window, evaluating only 121 candidates per channel. Both methods reuse
+                    the same search function. For pyramid scoring, I exclude 10% photographic
+                    borders plus a margin covering the largest total candidate shift, keeping
+                    wrapped pixels out and using the same scoring region for every candidate
+                    at that level. These crops affect scoring, not the saved image dimensions.</p>
+            </section>
+
+            <section class="results-section" aria-labelledby="compiled-results-title">
+                <h2 id="compiled-results-title">Compiled results</h2>
+                <p class="offset-convention">All results use NCC. Offsets are (x, y) in pixels,
+                    relative to the blue channel. Click an image name to open its result.</p>
+                <div class="results-table-wrap" role="region" aria-label="Single-scale alignment · NCC · 3 images" tabindex="0">
+                    <table class="results-table">
+                        <caption>Single-scale alignment · NCC · 3 images</caption>
+                        <thead><tr><th scope="col">Image</th><th scope="col">R (x, y)</th><th scope="col">G (x, y)</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row"><a href="../media/project1/single-scale/cathedral.jpg">Cathedral</a></th>
+
+                                <td>(3, 12)</td>
+                                <td>(2, 5)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><a href="../media/project1/single-scale/monastery.jpg">Monastery</a></th>
+
+                                <td>(2, 3)</td>
+                                <td>(2, -3)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><a href="../media/project1/single-scale/tobolsk.jpg">Tobolsk</a></th>
+
+                                <td>(3, 6)</td>
+                                <td>(2, 3)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="results-table-wrap" role="region" aria-label="Multi-scale pyramid alignment · NCC · 17 images" tabindex="0">
+                    <table class="results-table">
+                        <caption>Multi-scale pyramid alignment · NCC · 17 images</caption>
+                        <thead><tr><th scope="col">Image</th><th scope="col">R (x, y)</th><th scope="col">G (x, y)</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row"><a href="../media/project1/multi-scale/cathedral.jpg">Cathedral</a></th>
+
+                                <td>(3, 12)</td>
+                                <td>(2, 5)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><a href="../media/project1/multi-scale/church.jpg">Church</a></th>
+
+                                <td>(-4, 58)</td>
+                                <td>(4, 25)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><a href="../media/project1/multi-scale/emir.jpg">Emir</a> <span class="result-note">(red misaligned)</span></th>
+
+                                <td>(-483, -181)</td>
+                                <td>(24, 49)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><a href="../media/project1/multi-scale/harvesters.jpg">Harvesters</a></th>
+
+                                <td>(14, 124)</td>
+                                <td>(17, 60)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><a href="../media/project1/multi-scale/icon.jpg">Icon</a></th>
+
+                                <td>(23, 89)</td>
+                                <td>(17, 41)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><a href="../media/project1/multi-scale/ilemselga.jpg">Ilemselga</a></th>
+
+                                <td>(11, 130)</td>
+                                <td>(7, 40)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><a href="../media/project1/multi-scale/melons.jpg">Melons</a></th>
+
+                                <td>(13, 178)</td>
+                                <td>(10, 81)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><a href="../media/project1/multi-scale/monastery.jpg">Monastery</a></th>
+
+                                <td>(2, 3)</td>
+                                <td>(2, -3)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><a href="../media/project1/multi-scale/religous_painting.jpg">Religious painting</a></th>
+
+                                <td>(7, 68)</td>
+                                <td>(3, 28)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><a href="../media/project1/multi-scale/self_portrait.jpg">Self portrait</a></th>
+
+                                <td>(37, 176)</td>
+                                <td>(29, 79)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><a href="../media/project1/multi-scale/siren.jpg">Siren</a></th>
+
+                                <td>(-25, 96)</td>
+                                <td>(-6, 49)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><a href="../media/project1/multi-scale/three_generations.jpg">Three generations</a></th>
+
+                                <td>(11, 111)</td>
+                                <td>(14, 53)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><a href="../media/project1/multi-scale/tobolsk.jpg">Tobolsk</a></th>
+
+                                <td>(3, 6)</td>
+                                <td>(3, 3)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><a href="../media/project1/multi-scale/wharf.jpg">Wharf</a></th>
+
+                                <td>(-16, 83)</td>
+                                <td>(-7, 15)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><a href="../media/project1/multi-scale/liesnaia_doroga.jpg">Liesnaia doroga</a> <span class="result-note">From the Prokudin-Gorskii collection</span></th>
+
+                                <td>(7, 97)</td>
+                                <td>(-32, 37)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><a href="../media/project1/multi-scale/na_dunaie.jpg">Na dunaie</a> <span class="result-note">From the Prokudin-Gorskii collection</span></th>
+
+                                <td>(101, 85)</td>
+                                <td>(51, 33)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><a href="../media/project1/multi-scale/v_oranzhereie.jpg">V oranzhereie</a> <span class="result-note">From the Prokudin-Gorskii collection</span></th>
+
+                                <td>(35, 126)</td>
+                                <td>(28, 60)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            <p>Rishabh Athreya</p>
+            <p>Project 1</p>
+        </footer>
+    </div>
+</body>
+</html>
