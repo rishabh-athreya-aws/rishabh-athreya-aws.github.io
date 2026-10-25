@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f8f6f1">
+<meta name="description" content="Project 3 Part B: training a denoising U-Net and MNIST flow-matching models from scratch. Rishabh Athreya, CS 180.">
+<title>Project 3 · Part B — Rishabh Athreya</title><style>
+:root { --paper:#f8f6f1; --ink:#191919; --muted:#696760; --rule:#d8d3c9; --blue:#315a8a; --selection:#dce7f2; }
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased; }
+::selection { background:var(--selection); }
+a { color:var(--blue); text-underline-offset:3px; }
+a:focus-visible, [tabindex]:focus-visible { outline:2px solid var(--blue); outline-offset:4px; }
+.page { width:min(100% - 2.5rem,48rem); margin-inline:auto; padding:2.25rem 0 2rem; }
+.site-header { display:flex; justify-content:space-between; align-items:center; gap:1.5rem; padding-bottom:1rem; border-bottom:1px solid var(--rule); }
+.name,.course-mark { font-size:.95rem; font-weight:650; letter-spacing:-.01em; }
+.name { color:inherit; text-decoration:none; }
+.name:hover { color:var(--blue); }
+.course-mark { color:var(--muted); }
+main { padding:clamp(3rem,8vw,4.5rem) 0 3rem; }
+.back-link { display:inline-block; margin-bottom:1.2rem; font-size:.8rem; font-weight:650; text-decoration:none; }
+h1 { margin:0; font-size:clamp(2.4rem,7vw,4rem); font-weight:600; letter-spacing:-.055em; line-height:1.08; text-wrap:balance; }
+.project-label { margin:0 0 1rem; color:var(--muted); font-size:.77rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+.project-subtitle { margin:1.5rem 0 2rem; color:var(--muted); max-width:40rem; }
+p { margin:1rem 0; }
+.setup { padding:1rem 0; border-top:1px solid var(--rule); border-bottom:1px solid var(--rule); font-size:.85rem; }
+.setup p { margin:.35rem 0; }
+.part-nav { display:flex; flex-wrap:wrap; gap:.6rem 1.25rem; padding:.75rem 0; border-bottom:1px solid var(--rule); font-size:.82rem; }
+.part-nav a { text-decoration:none; }
+.part-nav [aria-current="page"] { color:var(--ink); font-weight:650; }
+.toc { margin-top:2rem; }
+.toc h2 { font-size:.77rem; text-transform:uppercase; letter-spacing:.1em; }
+.toc ol { list-style:none; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:.35rem 1.5rem; }
+.toc a { font-size:.82rem; text-decoration:none; }
+.toc a:hover { text-decoration:underline; }
+.results-section { margin-top:clamp(3rem,8vw,5rem); padding-top:2rem; border-top:1px solid var(--rule); scroll-margin-top:1.5rem; }
+h2 { margin:0 0 .5rem; font-size:1.35rem; font-weight:600; letter-spacing:-.025em; line-height:1.35; }
+h3 { margin:2rem 0 .5rem; font-size:1.05rem; font-weight:600; }
+.formula { margin:1.5rem 0; padding:1rem; border:1px solid var(--rule); text-align:center; font-family:"Cambria Math",Georgia,serif; font-size:1.1rem; overflow-x:auto; }
+.formula-note { font-family:inherit; font-size:.85rem; color:var(--muted); }
+.result { margin:1.5rem 0 2rem; min-width:0; }
+.figure-scroll { overflow-x:auto; background:white; border:1px solid var(--rule); }
+.result a { display:block; }
+.result img { display:block; width:100%; height:auto; }
+figcaption { margin-top:.65rem; color:var(--muted); text-align:center; font-size:.8rem; line-height:1.5; }
+.figure-note { color:var(--muted); font-size:.82rem; }
+#velocity .result:has(img[src$="original.png"]) { width:min(100%,20rem); margin-inline:auto; }
+.prompt { padding-left:1rem; border-left:2px solid var(--rule); font-size:.9rem; }
+.prompt span { color:var(--muted); font-size:.75rem; font-weight:650; margin-right:.5rem; }
+.frequency-label { color:var(--muted); font-size:.82rem; }
+.hybrid-pair { display:grid; grid-template-columns:minmax(0,1fr) 10rem; gap:2rem; align-items:center; }
+.hybrid-pair .result { margin-top:1rem; }
+.distant .result { width:7rem; margin-inline:auto; }
+.site-footer { display:flex; justify-content:space-between; gap:1rem; padding-top:1rem; border-top:1px solid var(--rule); color:var(--muted); font-size:.76rem; }
+.site-footer p { margin:0; }
+.skip-link { position:absolute; top:-5rem; left:1rem; padding:.5rem 1rem; background:var(--paper); z-index:1; }
+.skip-link:focus { top:1rem; }
+@media(max-width:36rem) {
+ .page { width:calc(100% - 2rem); padding-top:1.25rem; }
+ main { padding-top:2.5rem; }
+ .toc ol { grid-template-columns:1fr; gap:.5rem; }
+ .part-nav { gap:.45rem 1rem; }
+ .wide img { min-width:640px; }
+ .wide .figure-scroll { scrollbar-width:thin; }
+ .hybrid-pair { grid-template-columns:minmax(0,1fr) 6rem; gap:1rem; }
+ .distant .result { width:5rem; }
+ .site-footer { flex-direction:column; gap:.15rem; }
+ .formula { font-size:1rem; }
+}
+@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+@media print {
+ @page { size:A4; margin:15mm; }
+ body { background:white; font-size:10pt; line-height:1.5; }
+ .page { width:100%; padding:0; }
+ main { padding-top:1.5rem; }
+ .skip-link,.back-link,.toc,.screen-note { display:none; }
+ h1 { font-size:30pt; }
+ h2 { font-size:16pt; }
+ h3 { font-size:12pt; }
+ h2,h3,.project-label,.prompt { break-after:avoid; }
+ p { orphans:3; widows:3; }
+ .results-section { margin-top:1.5rem; padding-top:1rem; }
+ .result,.formula,.hybrid-pair { break-inside:avoid; }
+ .result { margin:1rem 0 1.25rem; }
+ .figure-scroll { overflow:visible; }
+ .wide img { min-width:0; }
+ .result img { max-width:100%; }
+ a { color:inherit; text-decoration:none; }
+ figcaption { font-size:8pt; }
+ .site-footer { display:none; }
+}
+</style></head><body>
+<a class="skip-link" href="#main">Skip to content</a><div class="page">
+<header class="site-header"><a class="name" href="../index.html">Rishabh Athreya</a><span class="course-mark">CS 180</span></header>
+<main id="main"><a class="back-link" href="../index.html">← All projects</a>
+<p class="project-label">Project 3 · Part B</p><h1>Flow Matching from Scratch</h1>
+<p class="project-subtitle">Training U-Nets to remove noise, learn a time-dependent flow, and generate handwritten digits.</p>
+<nav class="part-nav" aria-label="Project 3 parts"><a href="index.html">Part A · Exploring flow models</a><a href="partb.html" aria-current="page">Part B · Flow matching from scratch</a></nav>
+<p>Part A used a pretrained image model. Here I build and train the denoisers and flow models themselves on MNIST. The first experiments show what a one-step network learns from corrupted digits; the second teaches a U-Net how to move a sample from random noise to the data distribution.</p>
+<p class="figure-note screen-note">Select a figure to open the full-size image. Wide figures scroll horizontally on small screens.</p>
+<p class="screen-note"><a href="part-b.pdf" download>Download Part B as PDF</a> · <a href="partb.ipynb" download>Download the Part B notebook</a></p>
+<section class="results-section" id="unet" aria-labelledby="unet-title"><p class="project-label">Part 1 · Single-step denoising</p><h2 id="unet-title">1.1 Building the denoising U-Net</h2><p>I implement the image-to-image model as a U-Net: convolutions learn local features, downsampling adds context, and upsampling restores the 28 × 28 resolution. Skip connections join encoder and decoder features at matching scales, preserving fine digit strokes that could be lost in the bottleneck. The provided blocks use convolution, batch normalization, and GELU; the output layer predicts one grayscale image.</p></section><section class="results-section" id="noising" aria-labelledby="noising-title"><p class="project-label">Part 1 · Single-step denoising</p><h2 id="noising-title">1.2 Constructing noisy MNIST inputs</h2><p>MNIST images are normalized to [0, 1]. I add independent standard Gaussian noise at each prescribed strength. Holding the example and noise realization fixed across columns makes it possible to see how increasing σ changes the same digit.</p><div class="formula">z = x + σε, &nbsp; ε ∼ 𝒩(0, I)</div><figure class="result">
+<div class="figure-scroll" tabindex="0" role="region" aria-label="Noising schedule · σ = 0, 0.2, 0.4, 0.5, 0.6, 0.8, 1.0"><a href="../media/project3/partb/1.2/120_noising.png.jpg" aria-label="Open full-size image: Noising schedule · σ = 0, 0.2, 0.4, 0.5, 0.6, 0.8, 1.0"><img src="../media/project3/partb/1.2/120_noising.png.jpg" width="801" height="966" alt="Ten rows of MNIST digits, each followed by noisy versions at increasing sigma values." decoding="async"></a></div>
+<figcaption>Noising schedule · σ = 0, 0.2, 0.4, 0.5, 0.6, 0.8, 1.0</figcaption></figure></section><section class="results-section" id="denoiser-training" aria-labelledby="denoiser-training-title"><p class="project-label">Part 1 · Single-step denoising</p><h2 id="denoiser-training-title">1.2.1 Training a single-step denoiser</h2><p>The unconditional U-Net is trained to map a noisy digit directly to its clean target. Each batch receives fresh σ = 0.5 noise, so the model sees different corruptions over training. I use the assignment’s five-epoch setup and compare the same held-out digits and noise at epochs 1 and 5.</p><div class="formula">L = 𝔼[‖D<sub>θ</sub>(x + 0.5ε) − x‖²]</div><h3>Training loss</h3><figure class="result wide">
+<div class="figure-scroll" tabindex="0" role="region" aria-label="Single-step denoiser · Training loss across five epochs"><a href="../media/project3/partb/1.2/121_training_loss.jpg" aria-label="Open full-size image: Single-step denoiser · Training loss across five epochs"><img src="../media/project3/partb/1.2/121_training_loss.jpg" width="788" height="290" alt="Mean squared error drops rapidly early in training and then levels off." decoding="async"></a></div>
+<figcaption>Single-step denoiser · Training loss across five epochs</figcaption></figure><h3>Epoch 1</h3><figure class="result wide">
+<div class="figure-scroll" tabindex="0" role="region" aria-label="Clean, noisy, and denoised test digits after epoch 1"><a href="../media/project3/partb/1.2/121_epoch1.png" aria-label="Open full-size image: Clean, noisy, and denoised test digits after epoch 1"><img src="../media/project3/partb/1.2/121_epoch1.png" width="1906" height="626" alt="Ten MNIST test digits, their sigma 0.5 noisy versions, and model estimates after epoch 1." decoding="async"></a></div>
+<figcaption>Clean, noisy, and denoised test digits after epoch 1</figcaption></figure><h3>Epoch 5</h3><figure class="result wide">
+<div class="figure-scroll" tabindex="0" role="region" aria-label="The same test digits after epoch 5"><a href="../media/project3/partb/1.2/121_epoch5.png" aria-label="Open full-size image: The same test digits after epoch 5"><img src="../media/project3/partb/1.2/121_epoch5.png" width="1932" height="620" alt="Clean, noisy and denoised examples after epoch 5, using the same test noise as epoch 1." decoding="async"></a></div>
+<figcaption>The same test digits after epoch 5</figcaption></figure><p>By epoch 1, the model recovers the broad shape of most digits. By epoch 5, the estimates are cleaner and closer to the clean row, while retaining some softened or altered strokes. Evaluating identical examples at both checkpoints makes this change easier to attribute to training.</p></section><section class="results-section" id="ood" aria-labelledby="ood-title"><p class="project-label">Part 1 · Single-step denoising</p><h2 id="ood-title">1.2.2 Testing at unseen noise levels</h2><p>The denoiser was trained with σ = 0.5. To check how it handles inputs outside that training condition, I hold one test digit and its noise pattern fixed, vary σ, and apply the same trained model to each version.</p><figure class="result wide">
+<div class="figure-scroll" tabindex="0" role="region" aria-label="One held-out 7 · σ = 0 to 1.0"><a href="../media/project3/partb/1.2/122_out_of_dist.jpg" aria-label="Open full-size image: One held-out 7 · σ = 0 to 1.0"><img src="../media/project3/partb/1.2/122_out_of_dist.jpg" width="1166" height="495" alt="The same clean digit 7, noisy input, and denoised result across seven sigma values." decoding="async"></a></div>
+<figcaption>One held-out 7 · σ = 0 to 1.0</figcaption></figure><p>At lower noise levels, the digit stays legible with only a small perturbation. At high σ, the same 7 is harder to recover; the strongest-noise estimates become less faithful and develop extra marks. This illustrates the limit of a model trained on one noise strength when the input corruption changes.</p></section><section class="results-section" id="pure-noise" aria-labelledby="pure-noise-title"><p class="project-label">Part 1 · Single-step denoising</p><h2 id="pure-noise-title">1.2.3 Learning to denoise pure noise</h2><p>For this experiment the input is independent Gaussian noise, so it contains no information about the clean target digit. The U-Net is otherwise trained against clean MNIST images with the same mean-squared-error objective. The noise is resampled during training, and the displayed test inputs stay fixed between epochs.</p><div class="formula">L = 𝔼<sub>x,ε</sub>[‖D<sub>θ</sub>(ε) − x‖²]</div><figure class="result wide">
+<div class="figure-scroll" tabindex="0" role="region" aria-label="Pure-noise denoiser · Training loss across five epochs"><a href="../media/project3/partb/1.2/123_loss.png" aria-label="Open full-size image: Pure-noise denoiser · Training loss across five epochs"><img src="../media/project3/partb/1.2/123_loss.png" width="1252" height="454" alt="Mean squared error while training the unconditional denoiser from pure Gaussian noise." decoding="async"></a></div>
+<figcaption>Pure-noise denoiser · Training loss across five epochs</figcaption></figure><h3>Epoch 1</h3><figure class="result wide">
+<div class="figure-scroll" tabindex="0" role="region" aria-label="Ten pure-noise inputs and their outputs after epoch 1"><a href="../media/project3/partb/1.2/123_epoch1.png" aria-label="Open full-size image: Ten pure-noise inputs and their outputs after epoch 1"><img src="../media/project3/partb/1.2/123_epoch1.png" width="1924" height="462" alt="Each independent Gaussian-noise input maps to a similar blurry digit-like image after epoch 1." decoding="async"></a></div>
+<figcaption>Ten pure-noise inputs and their outputs after epoch 1</figcaption></figure><h3>Epoch 5</h3><figure class="result wide">
+<div class="figure-scroll" tabindex="0" role="region" aria-label="The same pure-noise inputs after epoch 5"><a href="../media/project3/partb/1.2/123_epoch5.png" aria-label="Open full-size image: The same pure-noise inputs after epoch 5"><img src="../media/project3/partb/1.2/123_epoch5.png" width="1974" height="448" alt="The denoiser continues to map independent noise inputs to similar blurred outputs after epoch 5." decoding="async"></a></div>
+<figcaption>The same pure-noise inputs after epoch 5</figcaption></figure><p>The outputs all approach a similar blurry, “3”-like average instead of following their different noise patterns. Since noise and target are independent, no observation tells the model which digit to reproduce. Under squared error, the best prediction is the pixelwise mean of the training digits; blending their strokes produces a soft, ambiguous shape. This matches the repeated pattern in both epochs.</p></section><section class="results-section" id="time-unet" aria-labelledby="time-unet-title"><p class="project-label">Part 2 · Flow matching</p><h2 id="time-unet-title">2.1 Conditioning a U-Net on time</h2><p>Flow matching trains a network to predict how an image should move from Gaussian noise toward a data example. A random MNIST image x₁ and noise x₀ define points along a straight interpolation; the target velocity is their constant difference. The model must see t because the same intermediate image statistics call for different predictions at different points along the path.</p><div class="formula">x<sub>t</sub> = (1 − t)x<sub>0</sub> + tx<sub>1</sub>, &nbsp; u = x<sub>1</sub> − x<sub>0</sub></div><p>A small fully connected block embeds the scalar time value. Its features modulate internal U-Net activations, while image skip connections continue to carry spatial detail. Training uses a mean-squared error between predicted and target velocity. At generation time, Euler steps repeatedly add the predicted velocity, updating the image and time together.</p></section><section class="results-section" id="flow-training" aria-labelledby="flow-training-title"><p class="project-label">Part 2 · Flow matching</p><h2 id="flow-training-title">2.2 Training the time-conditioned flow model</h2><p>The time-conditioned U-Net is trained on shuffled MNIST batches with random Gaussian starting points and random times. Each training example is interpolated between noise and a clean digit, and the model predicts x₁ − x₀. The run shown uses the assignment’s ten-epoch schedule, with an exponential learning-rate decay.</p><div class="formula">L = 𝔼<sub>x₀,x₁,t</sub>[‖u<sub>θ</sub>(x<sub>t</sub>, t) − (x₁ − x₀)‖²]</div><figure class="result wide">
+<div class="figure-scroll" tabindex="0" role="region" aria-label="Time-conditioned flow matching · Training loss"><a href="../media/project3/partb/22_loss.jpg" aria-label="Open full-size image: Time-conditioned flow matching · Training loss"><img src="../media/project3/partb/22_loss.jpg" width="790" height="290" alt="Flow-matching mean squared velocity error over the training run, with a sharp early drop and a lower, flatter tail." decoding="async"></a></div>
+<figcaption>Time-conditioned flow matching · Training loss</figcaption></figure><p>The loss falls sharply during the early updates, then changes more gradually as training continues. The curve tracks velocity-prediction error on training interpolants; sample grids are a separate visual check of whether integrating that field produces legible digits.</p></section><section class="results-section" id="flow-samples" aria-labelledby="flow-samples-title"><p class="project-label">Part 2 · Flow matching</p><h2 id="flow-samples-title">2.3 Sampling from the time-only model</h2><p>Sampling starts from a fresh noise image at t = 0. I divide the interval into 50 Euler steps and repeatedly evaluate the time-conditioned network, moving each state toward t = 1. The grid shows ten independently seeded samples from each saved checkpoint.</p><div class="formula">x<sub>t+h</sub> = x<sub>t</sub> + h u<sub>θ</sub>(x<sub>t</sub>, t), &nbsp; h = 1/50</div><figure class="result wide">
+<div class="figure-scroll" tabindex="0" role="region" aria-label="Time-only samples · Epochs 1, 5, and 10 · Ten seeds per checkpoint"><a href="../media/project3/partb/2.3/23_samples.png" aria-label="Open full-size image: Time-only samples · Epochs 1, 5, and 10 · Ten seeds per checkpoint"><img src="../media/project3/partb/2.3/23_samples.png" width="1844" height="832" alt="Three rows of ten grayscale samples from the time-conditioned model at epochs 1, 5 and 10." decoding="async"></a></div>
+<figcaption>Time-only samples · Epochs 1, 5, and 10 · Ten seeds per checkpoint</figcaption></figure><p>Epoch 1 mostly produces fragmented strokes. By epochs 5 and 10, more samples have connected loops and recognizable digit-like structure, though several images remain malformed or ambiguous. Training improves the learned flow, but this unconditional model has no class label to control which digit should appear.</p></section><section class="results-section" id="class-conditional" aria-labelledby="class-conditional-title"><p class="project-label">Part 2 · Flow matching</p><h2 id="class-conditional-title">2.4 Class-conditioned U-Net</h2><p>The class-conditioned U-Net receives both the current time and a one-hot digit label. Separate learned embeddings modulate decoder features so the model can steer its flow toward a requested class. During training, the label is dropped for 10% of examples; this teaches the same model to make unconditional predictions for classifier-free guidance.</p><div class="formula">v<sub>guided</sub> = v<sub>u</sub> + 5(v<sub>c</sub> − v<sub>u</sub>)</div><p>Section 2.4 develops the architecture used in the following experiments; the assignment lists no separate result deliverable for this section.</p></section><section class="results-section" id="class-training" aria-labelledby="class-training-title"><p class="project-label">Part 2 · Flow matching</p><h2 id="class-training-title">2.5 Training the class-conditioned models</h2><p>Both models use the class-conditioned U-Net with hidden dimension 64 and 10% class dropout. The scheduled run uses Adam, starts at learning rate 0.01, and decays exponentially for ten epochs. The independent comparison uses a constant learning rate of 0.001, matching the scheduled run’s rate at the end of training.</p><h3>Scheduled and constant-rate comparison</h3><figure class="result wide">
+<div class="figure-scroll" tabindex="0" role="region" aria-label="Class-conditioned training loss · Exponential scheduler and constant learning rate 0.001"><a href="../media/project3/partb/2.5/25_main_exp.png" aria-label="Open full-size image: Class-conditioned training loss · Exponential scheduler and constant learning rate 0.001"><img src="../media/project3/partb/2.5/25_main_exp.png" width="1466" height="584" alt="Training loss curves comparing the exponential learning-rate scheduler with a constant learning rate of 0.001." decoding="async"></a></div>
+<figcaption>Class-conditioned training loss · Exponential scheduler and constant learning rate 0.001</figcaption></figure><p>Both losses fall sharply at the start and continue to decrease. The traces remain close later in training, suggesting the smaller constant rate maintains a similar training loss over this run.</p><h3>Constant-rate run</h3><figure class="result wide">
+<div class="figure-scroll" tabindex="0" role="region" aria-label="No-scheduler model · Training loss"><a href="../media/project3/partb/2.5/25_mainexp.jpg" aria-label="Open full-size image: No-scheduler model · Training loss"><img src="../media/project3/partb/2.5/25_mainexp.jpg" width="790" height="290" alt="Mean squared error for the class-conditioned model trained at constant learning rate 0.001." decoding="async"></a></div>
+<figcaption>No-scheduler model · Training loss</figcaption></figure><figure class="result wide">
+<div class="figure-scroll" tabindex="0" role="region" aria-label="No-scheduler run · Additional loss plot"><a href="../media/project3/partb/2.5/25_nosched.png" aria-label="Open full-size image: No-scheduler run · Additional loss plot"><img src="../media/project3/partb/2.5/25_nosched.png" width="1254" height="444" alt="Training loss from the no-scheduler class-conditioned run, with constant learning rate 0.001." decoding="async"></a></div>
+<figcaption>No-scheduler run · Additional loss plot</figcaption></figure><p>The standalone curves make the noisy step-to-step loss visible after the sharp initial drop. The learning rate was chosen to match the scheduled model’s final rate, providing a direct and simple scheduler comparison.</p></section><section class="results-section" id="class-samples" aria-labelledby="class-samples-title"><p class="project-label">Part 2 · Flow matching</p><h2 id="class-samples-title">2.6 Class-conditioned sampling</h2><p>For each sample grid, the model starts from random noise and takes 300 Euler updates. Classifier-free guidance uses γ = 5. Each grid has four rows; each row includes one sample for every digit from 0 to 9. I reuse the same seed across checkpoints and models so corresponding cells start from identical noise.</p><h3>Epoch 1</h3><figure class="result wide">
+<div class="figure-scroll" tabindex="0" role="region" aria-label="Four samples per digit after epoch 1"><a href="../media/project3/partb/2.6/26_epoch1.jpg" aria-label="Open full-size image: Four samples per digit after epoch 1"><img src="../media/project3/partb/2.6/26_epoch1.jpg" width="1183" height="495" alt="Class-conditioned MNIST samples after epoch 1, arranged as four rows of digits zero through nine." decoding="async"></a></div>
+<figcaption>Four samples per digit after epoch 1</figcaption></figure><h3>Epoch 5</h3><figure class="result wide">
+<div class="figure-scroll" tabindex="0" role="region" aria-label="Four samples per digit after epoch 5"><a href="../media/project3/partb/2.6/26_epoch5.jpg" aria-label="Open full-size image: Four samples per digit after epoch 5"><img src="../media/project3/partb/2.6/26_epoch5.jpg" width="1183" height="495" alt="Class-conditioned MNIST samples after epoch 5, arranged as four rows of digits zero through nine." decoding="async"></a></div>
+<figcaption>Four samples per digit after epoch 5</figcaption></figure><h3>Epoch 10</h3><figure class="result wide">
+<div class="figure-scroll" tabindex="0" role="region" aria-label="Four samples per digit after epoch 10"><a href="../media/project3/partb/2.6/26_epoch10.jpg" aria-label="Open full-size image: Four samples per digit after epoch 10"><img src="../media/project3/partb/2.6/26_epoch10.jpg" width="1183" height="495" alt="Class-conditioned MNIST samples after epoch 10, arranged as four rows of digits zero through nine." decoding="async"></a></div>
+<figcaption>Four samples per digit after epoch 10</figcaption></figure><h3>Without the scheduler</h3><figure class="result wide">
+<div class="figure-scroll" tabindex="0" role="region" aria-label="Four samples per digit · Constant learning rate 0.001"><a href="../media/project3/partb/2.6/26_nosched.jpg" aria-label="Open full-size image: Four samples per digit · Constant learning rate 0.001"><img src="../media/project3/partb/2.6/26_nosched.jpg" width="1183" height="495" alt="Class-conditioned samples from the no-scheduler model trained at constant learning rate 0.001." decoding="async"></a></div>
+<figcaption>Four samples per digit · Constant learning rate 0.001</figcaption></figure><p>At epoch 1, several classes already have recognizable forms, though some digits are malformed. By epochs 5 and 10, the requested labels are clear across nearly every row. The constant-rate model also produces legible examples that look broadly similar to the scheduled epoch 10 grid; differences remain in individual stroke shapes. The smaller constant rate therefore preserves useful sample quality here without an exponential schedule.</p></section>
+<section class="results-section" id="submission" aria-labelledby="submission-title"><p class="project-label">Submission checklist</p><h2 id="submission-title">Part B results</h2>
+<p>The current results include the denoising and time-only experiments, the class-conditioned training comparison, and guided samples for epochs 1, 5, and 10 with the no-scheduler model. Section 2.4 is represented by the implemented architecture and does not require a separate deliverable.</p>
+<p>Download the <a href="partb.ipynb">student notebook</a> or <a href="part-b.pdf">website PDF</a>. The assignment requires the code and website PDF on Gradescope, then the website URL in the project Google Form once both parts are complete.</p></section>
+</main><footer class="site-footer"><p>Rishabh Athreya</p><p>CS 180 · Project 3 · Part B</p></footer></div></body></html>

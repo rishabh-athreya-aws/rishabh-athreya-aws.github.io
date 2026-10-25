@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f8f6f1">
+<meta name="description" content="Project 3, Part A: denoising, guided generation, image editing, visual anagrams, and hybrid images with flow models. Rishabh Athreya’s CS 180 portfolio.">
+<title>Project 3 · Part A — Rishabh Athreya</title>
+<style>
+:root { --paper:#f8f6f1; --ink:#191919; --muted:#696760; --rule:#d8d3c9; --blue:#315a8a; --selection:#dce7f2; }
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased; }
+::selection { background:var(--selection); }
+a { color:var(--blue); text-underline-offset:3px; }
+a:focus-visible, [tabindex]:focus-visible { outline:2px solid var(--blue); outline-offset:4px; }
+.page { width:min(100% - 2.5rem,48rem); margin-inline:auto; padding:2.25rem 0 2rem; }
+.site-header { display:flex; justify-content:space-between; align-items:center; gap:1.5rem; padding-bottom:1rem; border-bottom:1px solid var(--rule); }
+.name,.course-mark { font-size:.95rem; font-weight:650; letter-spacing:-.01em; }
+.name { color:inherit; text-decoration:none; }
+.name:hover { color:var(--blue); }
+.course-mark { color:var(--muted); }
+main { padding:clamp(3rem,8vw,4.5rem) 0 3rem; }
+.back-link { display:inline-block; margin-bottom:1.2rem; font-size:.8rem; font-weight:650; text-decoration:none; }
+h1 { margin:0; font-size:clamp(2.4rem,7vw,4rem); font-weight:600; letter-spacing:-.055em; line-height:1.08; text-wrap:balance; }
+.project-label { margin:0 0 1rem; color:var(--muted); font-size:.77rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+.project-subtitle { margin:1.5rem 0 2rem; color:var(--muted); max-width:40rem; }
+p { margin:1rem 0; }
+.setup { padding:1rem 0; border-top:1px solid var(--rule); border-bottom:1px solid var(--rule); font-size:.85rem; }
+.setup p { margin:.35rem 0; }
+.part-nav { display:flex; flex-wrap:wrap; gap:.6rem 1.25rem; padding:.75rem 0; border-bottom:1px solid var(--rule); font-size:.82rem; }
+.part-nav a { text-decoration:none; }
+.part-nav [aria-current="page"] { color:var(--ink); font-weight:650; }
+.toc { margin-top:2rem; }
+.toc h2 { font-size:.77rem; text-transform:uppercase; letter-spacing:.1em; }
+.toc ol { list-style:none; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:.35rem 1.5rem; }
+.toc a { font-size:.82rem; text-decoration:none; }
+.toc a:hover { text-decoration:underline; }
+.results-section { margin-top:clamp(3rem,8vw,5rem); padding-top:2rem; border-top:1px solid var(--rule); scroll-margin-top:1.5rem; }
+h2 { margin:0 0 .5rem; font-size:1.35rem; font-weight:600; letter-spacing:-.025em; line-height:1.35; }
+h3 { margin:2rem 0 .5rem; font-size:1.05rem; font-weight:600; }
+.formula { margin:1.5rem 0; padding:1rem; border:1px solid var(--rule); text-align:center; font-family:"Cambria Math",Georgia,serif; font-size:1.1rem; overflow-x:auto; }
+.formula-note { font-family:inherit; font-size:.85rem; color:var(--muted); }
+.result { margin:1.5rem 0 2rem; min-width:0; }
+.figure-scroll { overflow-x:auto; background:white; border:1px solid var(--rule); }
+.result a { display:block; }
+.result img { display:block; width:100%; height:auto; }
+figcaption { margin-top:.65rem; color:var(--muted); text-align:center; font-size:.8rem; line-height:1.5; }
+.figure-note { color:var(--muted); font-size:.82rem; }
+#velocity .result:has(img[src$="original.png"]) { width:min(100%,20rem); margin-inline:auto; }
+.prompt { padding-left:1rem; border-left:2px solid var(--rule); font-size:.9rem; }
+.prompt span { color:var(--muted); font-size:.75rem; font-weight:650; margin-right:.5rem; }
+.frequency-label { color:var(--muted); font-size:.82rem; }
+.hybrid-pair { display:grid; grid-template-columns:minmax(0,1fr) 10rem; gap:2rem; align-items:center; }
+.hybrid-pair .result { margin-top:1rem; }
+.distant .result { width:7rem; margin-inline:auto; }
+.site-footer { display:flex; justify-content:space-between; gap:1rem; padding-top:1rem; border-top:1px solid var(--rule); color:var(--muted); font-size:.76rem; }
+.site-footer p { margin:0; }
+.skip-link { position:absolute; top:-5rem; left:1rem; padding:.5rem 1rem; background:var(--paper); z-index:1; }
+.skip-link:focus { top:1rem; }
+@media(max-width:36rem) {
+ .page { width:calc(100% - 2rem); padding-top:1.25rem; }
+ main { padding-top:2.5rem; }
+ .toc ol { grid-template-columns:1fr; gap:.5rem; }
+ .part-nav { gap:.45rem 1rem; }
+ .wide img { min-width:640px; }
+ .wide .figure-scroll { scrollbar-width:thin; }
+ .hybrid-pair { grid-template-columns:minmax(0,1fr) 6rem; gap:1rem; }
+ .distant .result { width:5rem; }
+ .site-footer { flex-direction:column; gap:.15rem; }
+ .formula { font-size:1rem; }
+}
+@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+@media print {
+ @page { size:A4; margin:15mm; }
+ body { background:white; font-size:10pt; line-height:1.5; }
+ .page { width:100%; padding:0; }
+ main { padding-top:1.5rem; }
+ .skip-link,.back-link,.toc,.screen-note { display:none; }
+ h1 { font-size:30pt; }
+ h2 { font-size:16pt; }
+ h3 { font-size:12pt; }
+ h2,h3,.project-label,.prompt { break-after:avoid; }
+ p { orphans:3; widows:3; }
+ .results-section { margin-top:1.5rem; padding-top:1rem; }
+ .result,.formula,.hybrid-pair { break-inside:avoid; }
+ .result { margin:1rem 0 1.25rem; }
+ .figure-scroll { overflow:visible; }
+ .wide img { min-width:0; }
+ .result img { max-width:100%; }
+ a { color:inherit; text-decoration:none; }
+ figcaption { font-size:8pt; }
+ .site-footer { display:none; }
+}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="page">
+<header class="site-header"><a class="name" href="../index.html">Rishabh Athreya</a><span class="course-mark">CS 180</span></header>
+<main id="main">
+<a class="back-link" href="../index.html">← All projects</a>
+<p class="project-label">Project 3 · Part A</p>
+<h1>Exploring the Power of Flow Models</h1>
+<p class="project-subtitle">From noisy pixels to guided edits: sampling, reconstruction, and optical illusions with a pretrained image model.</p>
+<p>This project explores how a flow model moves an image from noise toward a coherent result. I begin with a photograph and compare three ways to denoise it, then use text guidance to generate portraits, edit familiar shapes, and combine two interpretations in one image.</p>
+<div class="setup" aria-label="Experiment setup">
+<p><strong>Model:</strong> PixNerd-XXL-P16-T2I · 512 × 512 image space · pretrained inference.</p>
+<p><strong>Conventions:</strong> RGB inputs in [−1, 1]; time runs from noise at 0 to image at 1. Euler step size h = 0.02. Guided experiments use w = 7 and an empty unconditional prompt.</p>
+</div>
+<p class="screen-note"><a href="part-a.pdf" download>Download Part A as PDF</a> · <a href="parta.ipynb" download>Download the Part A notebook</a></p>
+<nav class="part-nav" aria-label="Project 3 parts"><a href="index.html" aria-current="page">Part A · Exploring flow models</a><a href="partb.html">Part B · Flow matching from scratch</a></nav>
+<nav class="toc" aria-label="Part A sections"><h2>On this page</h2><ol><li><a href="#noisy-inputs">1.1 Constructing noisy training inputs</a></li><li><a href="#gaussian-denoising">1.2 Classical denoising</a></li><li><a href="#one-step">1.3 One-step denoising</a></li><li><a href="#velocity">1.4 Visualizing velocity</a></li><li><a href="#euler">1.5 Iterative denoising with Euler sampling</a></li><li><a href="#generation">1.6 Generating images from noise</a></li><li><a href="#cfg">2.1 Classifier-free guidance</a></li><li><a href="#image-editing">3.1 Image-to-image editing</a></li><li><a href="#text-editing">3.2 Text-guided image editing</a></li><li><a href="#anagrams">3.3 Visual anagrams</a></li><li><a href="#hybrids">3.4 Hybrid images</a></li><li><a href="#reflection">Reflection</a></li></ol></nav>
+<p class="figure-note screen-note">Select any figure to open the full-resolution image. On a small screen, wide comparison figures scroll horizontally to keep their labels readable.</p>
+<section class="results-section" id="noisy-inputs" aria-labelledby="noisy-inputs-title"><p class="project-label">Part A · Training and sampling</p><h2 id="noisy-inputs-title">1.1 Constructing noisy training inputs</h2><p>I use a photo of a yogurt bowl with raspberries, blueberries, and granola throughout the denoising experiments. It contains smooth regions, strong boundaries, and fine texture, so it makes the difference between removing noise and preserving detail easy to see.</p><div class="formula">x<sub>t</sub> = (1 − t)ε + tx<sub>1</sub>, &nbsp; ε ∼ 𝒩(0, I)</div><p>The interpolation scales both the noise and the clean image. At t = 0 the input is entirely noise; at t = 1 it is the original image. Holding the image and noise realization fixed across times makes the comparison about the noise level. Increasing t makes the bowl easier to recognize, but the granola and berry surfaces are still noisy at t = 0.75.</p><figure class="result wide">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="Original · t = 0.25 · t = 0.50 · t = 0.75">
+        <a href="../media/project3/11_noise_samples.png" aria-label="Open full-size image: Original · t = 0.25 · t = 0.50 · t = 0.75"><img src="../media/project3/11_noise_samples.png" width="1593" height="411" alt="Original yogurt bowl and three increasingly clear noisy versions." decoding="async"></a>
+    </div>
+    <figcaption>Original · t = 0.25 · t = 0.50 · t = 0.75</figcaption>
+</figure></section><section class="results-section" id="gaussian-denoising" aria-labelledby="gaussian-denoising-title"><h2 id="gaussian-denoising-title">1.2 Classical denoising</h2><p>Gaussian blur provides a baseline that does not use the learned model. Because interpolation attenuates the image by t, the baseline first divides by t and then applies the blur. This restores the signal amplitude but also amplifies the remaining noise.</p><div class="formula">x̂<sub>1</sub> = G<sub>σ</sub>(x<sub>t</sub> / t)</div><p>The displayed blur strengths decrease with the noise level: σ = 8, 4, and 2 for t = 0.25, 0.50, and 0.75. Stronger averaging suppresses more noise, at the cost of texture. At t = 0.25 the fruit becomes broad patches of color; at t = 0.75 a smaller blur keeps the berry outlines and more of the granola.</p><figure class="result">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="t = 0.25 · Noisy input and Gaussian blur, σ = 8">
+        <a href="../media/project3/12_baseline_denoise/t025.png" aria-label="Open full-size image: t = 0.25 · Noisy input and Gaussian blur, σ = 8"><img src="../media/project3/12_baseline_denoise/t025.png" width="793" height="411" alt="Noisy yogurt bowl at t=0.25, beside the Gaussian-denoised result with sigma 8." decoding="async"></a>
+    </div>
+    <figcaption>t = 0.25 · Noisy input and Gaussian blur, σ = 8</figcaption>
+</figure><figure class="result">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="t = 0.50 · Noisy input and Gaussian blur, σ = 4">
+        <a href="../media/project3/12_baseline_denoise/t05.png" aria-label="Open full-size image: t = 0.50 · Noisy input and Gaussian blur, σ = 4"><img src="../media/project3/12_baseline_denoise/t05.png" width="793" height="411" alt="Noisy yogurt bowl at t=0.50, beside the Gaussian-denoised result with sigma 4." decoding="async"></a>
+    </div>
+    <figcaption>t = 0.50 · Noisy input and Gaussian blur, σ = 4</figcaption>
+</figure><figure class="result">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="t = 0.75 · Noisy input and Gaussian blur, σ = 2">
+        <a href="../media/project3/12_baseline_denoise/t075.png" aria-label="Open full-size image: t = 0.75 · Noisy input and Gaussian blur, σ = 2"><img src="../media/project3/12_baseline_denoise/t075.png" width="793" height="411" alt="Noisy yogurt bowl at t=0.75, beside the Gaussian-denoised result with sigma 2." decoding="async"></a>
+    </div>
+    <figcaption>t = 0.75 · Noisy input and Gaussian blur, σ = 2</figcaption>
+</figure></section><section class="results-section" id="one-step" aria-labelledby="one-step-title"><h2 id="one-step-title">1.3 One-step denoising</h2><p>The flow model predicts a velocity: a direction of change in image space. A single prediction can be extrapolated over the remaining interval to estimate the clean endpoint. The text condition for this experiment is <q>a high quality photo</q>.</p><div class="formula">x̂<sub>1</sub> = x<sub>t</sub> + (1 − t)v<sub>θ</sub>(x<sub>t</sub>, t, c)</div><p>This produces much more recognizable food than Gaussian blur at the same noise level. However, the low-t estimates simplify the raspberries into unusually smooth red shapes. The model can infer a plausible object without recovering its exact texture. At t = 0.75, more image evidence survives, and the estimate stays much closer to the original.</p><figure class="result wide">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="t = 0.25 · Original, noisy input, and one-step estimate">
+        <a href="../media/project3/13_onestep_denoise/t025.png" aria-label="Open full-size image: t = 0.25 · Original, noisy input, and one-step estimate"><img src="../media/project3/13_onestep_denoise/t025.png" width="1193" height="411" alt="Original yogurt bowl, saved noisy input at t=0.25, and one-step model estimate." decoding="async"></a>
+    </div>
+    <figcaption>t = 0.25 · Original, noisy input, and one-step estimate</figcaption>
+</figure><figure class="result wide">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="t = 0.50 · Original, noisy input, and one-step estimate">
+        <a href="../media/project3/13_onestep_denoise/t05.png" aria-label="Open full-size image: t = 0.50 · Original, noisy input, and one-step estimate"><img src="../media/project3/13_onestep_denoise/t05.png" width="1193" height="411" alt="Original yogurt bowl, saved noisy input at t=0.50, and one-step model estimate." decoding="async"></a>
+    </div>
+    <figcaption>t = 0.50 · Original, noisy input, and one-step estimate</figcaption>
+</figure><figure class="result wide">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="t = 0.75 · Original, noisy input, and one-step estimate">
+        <a href="../media/project3/13_onestep_denoise/t075.png" aria-label="Open full-size image: t = 0.75 · Original, noisy input, and one-step estimate"><img src="../media/project3/13_onestep_denoise/t075.png" width="1193" height="411" alt="Original yogurt bowl, saved noisy input at t=0.75, and one-step model estimate." decoding="async"></a>
+    </div>
+    <figcaption>t = 0.75 · Original, noisy input, and one-step estimate</figcaption>
+</figure></section><section class="results-section" id="velocity" aria-labelledby="velocity-title"><h2 id="velocity-title">1.4 Visualizing velocity</h2><p>Looking at the update itself helps explain the one-step result. For the known image/noise pair, the exact velocity is x<sub>1</sub> − ε. Multiplying by the remaining time gives the change needed to reach the original image. The comparison below is between these endpoint updates, rather than raw velocities.</p><div class="formula">Δ̂ = (1 − t)v<sub>θ</sub> &nbsp; · &nbsp; Δ<sub>gt</sub> = x<sub>1</sub> − x<sub>t</sub><br>E = √mean<sub>RGB</sub>[(Δ̂ − Δ<sub>gt</sub>)²]</div><figure class="result">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="Original image · Reference for all three times">
+        <a href="../media/project3/original.png" aria-label="Open full-size image: Original image · Reference for all three times"><img src="../media/project3/original.png" width="374" height="374" alt="Original yogurt bowl photograph, extracted from the input comparison." decoding="async"></a>
+    </div>
+    <figcaption>Original image · Reference for all three times</figcaption>
+</figure><p>Zero update is represented by middle gray. A common symmetric scale for the updates and common linear limits for the error maps allow comparisons across times. The RMS error is computed across the RGB channels before display scaling or clipping, so positive and negative channel errors cannot cancel.</p><figure class="result wide">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="t = 0.25 · Noisy input, predicted update, ground-truth update, and RGB RMS error">
+        <a href="../media/project3/14_visualize_vel/t025.png" aria-label="Open full-size image: t = 0.25 · Noisy input, predicted update, ground-truth update, and RGB RMS error"><img src="../media/project3/14_visualize_vel/t025.png" width="1558" height="411" alt="Four panels at t=0.25: noisy bowl, model endpoint update, true endpoint update, and error heatmap." decoding="async"></a>
+    </div>
+    <figcaption>t = 0.25 · Noisy input, predicted update, ground-truth update, and RGB RMS error</figcaption>
+</figure><figure class="result wide">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="t = 0.50 · Noisy input, predicted update, ground-truth update, and RGB RMS error">
+        <a href="../media/project3/14_visualize_vel/t05.png" aria-label="Open full-size image: t = 0.50 · Noisy input, predicted update, ground-truth update, and RGB RMS error"><img src="../media/project3/14_visualize_vel/t05.png" width="1558" height="411" alt="Four panels at t=0.50: noisy bowl, model endpoint update, true endpoint update, and error heatmap." decoding="async"></a>
+    </div>
+    <figcaption>t = 0.50 · Noisy input, predicted update, ground-truth update, and RGB RMS error</figcaption>
+</figure><figure class="result wide">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="t = 0.75 · Noisy input, predicted update, ground-truth update, and RGB RMS error">
+        <a href="../media/project3/14_visualize_vel/t075.png" aria-label="Open full-size image: t = 0.75 · Noisy input, predicted update, ground-truth update, and RGB RMS error"><img src="../media/project3/14_visualize_vel/t075.png" width="1558" height="411" alt="Four panels at t=0.75: noisy bowl, model endpoint update, true endpoint update, and error heatmap." decoding="async"></a>
+    </div>
+    <figcaption>t = 0.75 · Noisy input, predicted update, ground-truth update, and RGB RMS error</figcaption>
+</figure><p>The brightest errors trace detailed regions and boundaries, including the granola and the rim of the bowl. The t = 0.75 map is noticeably darker. This reflects both a more informative input and a shorter remaining update; it should not be read as a direct comparison of unscaled velocity error.</p></section><section class="results-section" id="euler" aria-labelledby="euler-title"><h2 id="euler-title">1.5 Iterative denoising with Euler sampling</h2><p>A single extrapolation assumes that the initial velocity remains useful all the way to the endpoint. Euler sampling instead takes a short step and evaluates the model again at the updated image and time. The direction can then change as the image becomes clearer.</p><div class="formula">x<sub>t+h</sub> = x<sub>t</sub> + h v<sub>θ</sub>(x<sub>t</sub>, t, c)</div><p>Starting at t = 0.50 with h = 0.02 gives 25 updates. The trajectory shows the initial state and every fifth update, including the final result. In a general sampler, the last step is shortened to min(h, 1 − t), so integration ends at exactly t = 1.</p><figure class="result wide">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="Euler trajectory · t = 0.50, 0.60, 0.70, 0.80, 0.90, 1.00">
+        <a href="../media/project3/15_euler_sample/t05.png" aria-label="Open full-size image: Euler trajectory · t = 0.50, 0.60, 0.70, 0.80, 0.90, 1.00"><img src="../media/project3/15_euler_sample/t05.png" width="1193" height="811" alt="Six states of Euler denoising, read left to right across the top row and then the bottom row." decoding="async"></a>
+    </div>
+    <figcaption>Euler trajectory · t = 0.50, 0.60, 0.70, 0.80, 0.90, 1.00</figcaption>
+</figure><h3>Comparing the denoisers</h3><figure class="result wide">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="Same t = 0.50 input · Original, Gaussian blur, one-step estimate, and Euler result">
+        <a href="../media/project3/15_euler_sample/comparison.png" aria-label="Open full-size image: Same t = 0.50 input · Original, Gaussian blur, one-step estimate, and Euler result"><img src="../media/project3/15_euler_sample/comparison.png" width="1593" height="411" alt="Comparison of the original bowl and three denoising methods using the same noise level." decoding="async"></a>
+    </div>
+    <figcaption>Same t = 0.50 input · Original, Gaussian blur, one-step estimate, and Euler result</figcaption>
+</figure><p>Gaussian blur leaves the scene soft. One-step denoising recovers the arrangement but smooths the raspberry texture. Euler restores more of the small surface detail and the granola’s structure. Its cost is 25 model evaluations instead of one; the sharper appearance also does not guarantee pixel-perfect recovery.</p></section><section class="results-section" id="generation" aria-labelledby="generation-title"><h2 id="generation-title">1.6 Generating images from noise</h2><p>The same sampler can start from pure Gaussian noise at t = 0 and integrate to t = 1. There is now no input photograph to reconstruct. The prompt <q>a high quality photo</q> supplies only a broad preference, leaving the model to choose the subject.</p><figure class="result wide">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="Five samples · Seeds 180–184 · Prompt: “a high quality photo”">
+        <a href="../media/project3/16_images_from_noise/output.png" aria-label="Open full-size image: Five samples · Seeds 180–184 · Prompt: “a high quality photo”"><img src="../media/project3/16_images_from_noise/output.png" width="1602" height="811" alt="Five unguided-by-CFG conditional samples: portraits with varying degrees of facial distortion." decoding="async"></a>
+    </div>
+    <figcaption>Five samples · Seeds 180–184 · Prompt: “a high quality photo”</figcaption>
+</figure><p>All five samples are portraits, even though the prompt does not request people. Their quality varies substantially: seed 180 has a largely missing face, while seed 183 has an irregular, painterly surface. Seeds 182 and 184 look more like ordinary photographs. This small sample suggests a strong portrait preference for this generic prompt; it is not a measurement of the model’s overall subject distribution.</p></section><section class="results-section" id="cfg" aria-labelledby="cfg-title"><p class="project-label">Part A · Conditional generation and guidance</p><h2 id="cfg-title">2.1 Classifier-free guidance</h2><p>Classifier-free guidance compares the conditional prediction with a prediction using an empty prompt. Extrapolating their difference strengthens the direction associated with the text condition. Here the guidance convention is conditional velocity plus w times the difference, so w = 0 already means ordinary conditional sampling.</p><div class="formula">v<sub>CFG</sub> = v<sub>c</sub> + w(v<sub>c</sub> − v<sub>u</sub>), &nbsp; w = 7</div><p>The results below use the same seed labels, 180–184, as the preceding samples, with the same generic photo prompt. Comparing matched seeds helps isolate the effect of guidance instead of comparing unrelated random draws.</p><figure class="result wide">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="Five guided samples · Seeds 180–184 · w = 7">
+        <a href="../media/project3/21_cfg/output.png" aria-label="Open full-size image: Five guided samples · Seeds 180–184 · w = 7"><img src="../media/project3/21_cfg/output.png" width="1602" height="811" alt="Five CFG portraits with clearer facial features and more consistent photographic lighting." decoding="async"></a>
+    </div>
+    <figcaption>Five guided samples · Seeds 180–184 · w = 7</figcaption>
+</figure><p>The guided outputs have much more coherent faces and consistent portrait lighting. They also converge on a similar polished headshot style. Guidance improves the visible quality here, but does not broaden the subject matter: every result is still a portrait. The change can be large enough to alter the apparent identity and composition for a given seed.</p></section><section class="results-section" id="image-editing" aria-labelledby="image-editing-title"><p class="project-label">Part A · Creative applications</p><h2 id="image-editing-title">3.1 Image-to-image editing</h2><p>Image-to-image editing begins partway along the noise-to-image path: mix an input with noise at a chosen starting time, then integrate to t = 1. Small starting times leave less input information and permit larger changes. Large starting times preserve more of the source. The editing sweeps use h = 0.02, guidance w = 7, and an empty unconditional prompt.</p><p>The generic prompt is <q>a high quality photo</q>. The Campanile and two personal photographs show how much retained geometry can constrain the result without a specific edit. I also test a web image and two hand-drawn inputs to see how image source and drawing style affect the sweep.</p><p class="figure-note">Each grid reads left to right, top row then bottom row: original, t = 0.02, 0.04, 0.06, 0.10, 0.14, 0.25, 0.50.</p><h3>Campanile</h3><figure class="result wide">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="Campanile · Original and seven starting times">
+        <a href="../media/project3/31_image_to_image/campanile.png" aria-label="Open full-size image: Campanile · Original and seven starting times"><img src="../media/project3/31_image_to_image/campanile.png" width="1593" height="811" alt="Campanile editing sweep from a smooth vertical shape at low starting time to the recognizable tower at high starting time." decoding="async"></a>
+    </div>
+    <figcaption>Campanile · Original and seven starting times</figcaption>
+</figure><p>At t = 0.02 the tower becomes a rounded vertical object. The long silhouette and blue sky survive before the architectural details do. By t = 0.25 the belfry is recognizable, and t = 0.50 closely preserves the original tower.</p><h3>Sunlit portrait</h3><figure class="result wide">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="Sunlit portrait · Original and seven starting times">
+        <a href="../media/project3/31_image_to_image/sun.png" aria-label="Open full-size image: Sunlit portrait · Original and seven starting times"><img src="../media/project3/31_image_to_image/sun.png" width="1593" height="811" alt="A reclining person by a window, edited across seven noise levels." decoding="async"></a>
+    </div>
+    <figcaption>Sunlit portrait · Original and seven starting times</figcaption>
+</figure><p>The lowest starting times produce different people and poses. At t = 0.10 and above, the reclining pose, gray shirt, and room layout become increasingly stable. Preserving composition is easier than preserving the exact person when little of the input remains.</p><h3>Pizza</h3><figure class="result wide">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="Pizza · Original and seven starting times">
+        <a href="../media/project3/31_image_to_image/pizza.png" aria-label="Open full-size image: Pizza · Original and seven starting times"><img src="../media/project3/31_image_to_image/pizza.png" width="1593" height="811" alt="Pizza editing sweep: portraits at low times, a mixed human and pizza image at 0.10, then increasingly faithful pizza images." decoding="async"></a>
+    </div>
+    <figcaption>Pizza · Original and seven starting times</figcaption>
+</figure><p>The pizza disappears entirely at the first few times, giving way to people. At t = 0.10, human forms and the circular pizza overlap awkwardly. By t = 0.14 it is recognizable as pizza again. This is a useful failure case: a generic prompt cannot reliably preserve the subject when the input is mostly noise.</p><h3>Web image · Pink Panther</h3><figure class="result wide">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="Pink Panther web image · Original and seven starting times">
+        <a href="../media/project3/31_image_to_image/pinkpanther_im2im.jpg" aria-label="Open full-size image: Pink Panther web image · Original and seven starting times"><img src="../media/project3/31_image_to_image/pinkpanther_im2im.jpg" width="2022" height="1018" alt="Pink Panther web image editing sweep, with fashion portraits and a perfume bottle at low times, returning to the cartoon at higher times." decoding="async"></a>
+    </div>
+    <figcaption>Web image · Pink Panther · Original and seven starting times</figcaption>
+</figure><p>The web image produces fashion portraits and a perfume bottle at low starting times, showing the generic photo prompt’s pull toward photographic subjects. At t = 0.25 and 0.50, the Pink Panther cartoon returns clearly as more source information is retained.</p><h3>Hand-drawn image · Lion</h3><figure class="result wide">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="Hand-drawn lion · Original and seven starting times">
+        <a href="../media/project3/31_image_to_image/lion_im2im.png" aria-label="Open full-size image: Hand-drawn lion · Original and seven starting times"><img src="../media/project3/31_image_to_image/lion_im2im.png" width="1990" height="1010" alt="Hand-drawn lion editing sweep, transitioning through portrait and appliance-like forms before recovering the lion drawing." decoding="async"></a>
+    </div>
+    <figcaption>Hand-drawn image · Lion · Original and seven starting times</figcaption>
+</figure><p>The pencil drawing does not remain a lion at low starting times; the model turns its broad shapes into portrait and appliance-like forms. The source drawing becomes recognizable again near t = 0.50, where the stronger retained structure outweighs the generic photographic prior.</p><h3>Hand-drawn image · Tortoise</h3><figure class="result wide">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="Hand-drawn tortoise · Original and seven starting times">
+        <a href="../media/project3/31_image_to_image/tortoise_im2im.png" aria-label="Open full-size image: Hand-drawn tortoise · Original and seven starting times"><img src="../media/project3/31_image_to_image/tortoise_im2im.png" width="1992" height="1010" alt="Hand-drawn tortoise editing sweep, with portrait-like outputs at low times and the original tortoise returning at high time." decoding="async"></a>
+    </div>
+    <figcaption>Hand-drawn image · Tortoise · Original and seven starting times</figcaption>
+</figure><p>The tortoise sweep similarly shifts toward portrait-like forms at low times, despite the drawing’s clear shell outline. At t = 0.25 a face appears; t = 0.50 brings back the hand-drawn tortoise. Across both drawings, the model’s photographic bias is strongest when little input structure survives.</p></section><section class="results-section" id="text-editing" aria-labelledby="text-editing-title"><h2 id="text-editing-title">3.2 Text-guided image editing</h2><p>Replacing the generic prompt with a desired edit adds a second constraint: the result should follow the text while retaining some of the source image. I pair each input with an edit related to its geometry—a tower and crayon, a seated person and jacket, and a pizza and clock.</p><p class="figure-note">Each grid reads left to right, top row then bottom row: original, t = 0.02, 0.04, 0.06, 0.10, 0.14, 0.25, 0.50.</p><h3>Campanile → crayon</h3><p class="prompt"><span>Prompt</span> “a vertical crayon”</p><figure class="result wide">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="Vertical crayon · Original and seven starting times">
+        <a href="../media/project3/32_text_guided_gen/campanile_crayon.png" aria-label="Open full-size image: Vertical crayon · Original and seven starting times"><img src="../media/project3/32_text_guided_gen/campanile_crayon.png" width="1580" height="811" alt="The Campanile becomes a yellow and blue pointed crayon at low times, then returns toward a tower as starting time increases." decoding="async"></a>
+    </div>
+    <figcaption>Vertical crayon · Original and seven starting times</figcaption>
+</figure><p>The narrow tower provides a strong shape cue. The first three edits produce a pointed drawing tool with yellow and blue coloring; by t = 0.10 the tower begins to reappear. The prompt transfers the silhouette successfully, although the early results look closer to a pencil than a wax crayon.</p><h3>Sunlit portrait → down jacket</h3><p class="prompt"><span>Prompt</span> “a person wearing a thick down jacket”</p><figure class="result wide">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="Down jacket · Original and seven starting times">
+        <a href="../media/project3/32_text_guided_gen/sun_jacket.png" aria-label="Open full-size image: Down jacket · Original and seven starting times"><img src="../media/project3/32_text_guided_gen/sun_jacket.png" width="1580" height="811" alt="Portrait editing sweep showing bulky jackets at low times and increasing preservation of the original person and room." decoding="async"></a>
+    </div>
+    <figcaption>Down jacket · Original and seven starting times</figcaption>
+</figure><p>At t = 0.02–0.06, the jacket dominates and the person changes substantially. Around t = 0.10–0.14, the padded jacket and seated composition coexist. By t = 0.50 the original shirt largely returns. The middle of the sweep gives the most useful balance between adding clothing and retaining the scene.</p><h3>Pizza → clock</h3><p class="prompt"><span>Prompt</span> “a circular clock”</p><figure class="result wide">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="Circular clock · Original and seven starting times">
+        <a href="../media/project3/32_text_guided_gen/pizza_clock.png" aria-label="Open full-size image: Circular clock · Original and seven starting times"><img src="../media/project3/32_text_guided_gen/pizza_clock.png" width="1580" height="811" alt="A pizza transformed into clocks, with numbers and hands gradually mixing with toppings at intermediate times." decoding="async"></a>
+    </div>
+    <figcaption>Circular clock · Original and seven starting times</figcaption>
+</figure><p>The circular outline makes this a natural shape match. Small starting times give recognizable clock faces; intermediate times preserve the tabletop view while blending clock numerals with toppings. At t = 0.25, the pizza is still visible underneath the clock features, and t = 0.50 mostly restores the food.</p></section><section class="results-section" id="anagrams" aria-labelledby="anagrams-title"><h2 id="anagrams-title">3.3 Visual anagrams</h2><p>For an upside-down illusion, one prompt is evaluated on the current image and another on its 180° rotation. The second predicted velocity must be rotated back before averaging, so both updates refer to the same pixel coordinates. Averaging the guided velocities at every Euler step encourages a single image to support both readings.</p><div class="formula">v = ½[CFG(x, t, p<sub>1</sub>) + R(CFG(R(x), t, p<sub>2</sub>))]<br><span class="formula-note">R rotates both spatial axes by 180°.</span></div><h3>Old man ↔ campfire</h3><p class="prompt"><span>Upright</span> “an oil painting of an old man”<br><span>Rotated</span> “an oil painting of people around a campfire”</p><figure class="result">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="The same image · Upright and rotated 180°">
+        <a href="../media/project3/33_visual_anagrams/man_campfire.png" aria-label="Open full-size image: The same image · Upright and rotated 180°"><img src="../media/project3/33_visual_anagrams/man_campfire.png" width="793" height="411" alt="An orange-lit old man upright; rotated, the warm central shape suggests a campfire with people around it." decoding="async"></a>
+    </div>
+    <figcaption>The same image · Upright and rotated 180°</figcaption>
+</figure><p>The warm highlights serve two purposes: facial structure upright, and firelight when rotated. The face remains a strong competing interpretation in the flipped view, so the campfire reading is more ambiguous. The shared dark palette makes the two prompts visually compatible.</p><h3>Snowy village ↔ horse</h3><p class="prompt"><span>Upright</span> “a lithograph of a snowy mountain village”<br><span>Rotated</span> “a lithograph of a horse”</p><figure class="result">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="The same image · Snowy village and rotated horse">
+        <a href="../media/project3/33_visual_anagrams/horse_village.png" aria-label="Open full-size image: The same image · Snowy village and rotated horse"><img src="../media/project3/33_visual_anagrams/horse_village.png" width="793" height="411" alt="A pale lithograph that combines snowy mountain and village contours with the silhouette of a horse when rotated." decoding="async"></a>
+    </div>
+    <figcaption>The same image · Snowy village and rotated horse</figcaption>
+</figure><p>The pale background and sparse linework let mountain slopes and rooftops double as the horse’s contours. The horse is especially legible in the rotated view, while the village view depends more on interpreting the small buildings and landscape marks.</p></section><section class="results-section" id="hybrids" aria-labelledby="hybrids-title"><h2 id="hybrids-title">3.4 Hybrid images</h2><p>A hybrid uses two prompts at the same image and time, but combines different frequency bands of their guided velocity predictions. The low-pass component sets broad structure; the high-pass residual contributes fine detail. Their sum becomes the velocity for the next Euler step.</p><div class="formula">v = G<sub>σ</sub>(v<sub>low</sub>) + [v<sub>high</sub> − G<sub>σ</sub>(v<sub>high</sub>)]</div><p>The high-pass term is the prediction minus its Gaussian blur. This isolates detail rather than adding a second full image. A broad Gaussian filter separates the two scales; the assignment suggests a 265-pixel kernel with σ = 16 at 512 × 512. Each result is shown at two display sizes to make the change in interpretation easier to inspect.</p><h3>Waterfall / skull</h3><p class="frequency-label">High-frequency subject: Waterfall · Low-frequency subject: Skull</p><div class="hybrid-pair"><figure class="result">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="Near view · Waterfall">
+        <a href="../media/project3/34_hybrid/skull_waterfall.png" aria-label="Open full-size image: Near view · Waterfall"><img src="../media/project3/34_hybrid/skull_waterfall.png" width="512" height="512" alt="Waterfall detail within the waterfall / skull hybrid." decoding="async"></a>
+    </div>
+    <figcaption>Near view · Waterfall</figcaption>
+</figure><div class="distant"><figure class="result">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="Distant view · Skull">
+        <a href="../media/project3/34_hybrid/skull_waterfall.png" aria-label="Open full-size image: Distant view · Skull"><img src="../media/project3/34_hybrid/skull_waterfall.png" width="512" height="512" alt="Reduced view emphasizing the broad skull structure." decoding="async"></a>
+    </div>
+    <figcaption>Distant view · Skull</figcaption>
+</figure></div></div><p>The waterfall’s vertical streams and surrounding trees are visible at full size. When reduced, the broad dark regions begin to read as facial cavities within a pale skull-like outline. The skull interpretation is subtle, so the near/far comparison is more informative than the full-size image alone.</p><h3>Forest / cat</h3><p class="frequency-label">High-frequency subject: Forest · Low-frequency subject: Cat</p><div class="hybrid-pair"><figure class="result">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="Near view · Forest">
+        <a href="../media/project3/34_hybrid/cat_forest.png" aria-label="Open full-size image: Near view · Forest"><img src="../media/project3/34_hybrid/cat_forest.png" width="512" height="512" alt="Forest detail within the forest / cat hybrid." decoding="async"></a>
+    </div>
+    <figcaption>Near view · Forest</figcaption>
+</figure><div class="distant"><figure class="result">
+    <div class="figure-scroll" tabindex="0" role="region" aria-label="Distant view · Cat">
+        <a href="../media/project3/34_hybrid/cat_forest.png" aria-label="Open full-size image: Distant view · Cat"><img src="../media/project3/34_hybrid/cat_forest.png" width="512" height="512" alt="Reduced view emphasizing the broad cat structure." decoding="async"></a>
+    </div>
+    <figcaption>Distant view · Cat</figcaption>
+</figure></div></div><p>Up close, the thin trunks and branches read as a forest. The broader silhouette above the trees suggests an animal head and ears when viewed small, although the cat is less immediately recognizable than the forest. This illustrates the difficulty of making both frequency bands equally convincing.</p></section><section class="results-section" id="reflection" aria-labelledby="reflection-title"><h2 id="reflection-title">Reflection</h2><p>The denoising experiments show a progression from local averaging to learned reconstruction: blur removes detail along with noise, while the flow model can recover recognizable structure and add plausible texture. Repeated Euler updates improve the yogurt bowl’s fine detail over a single extrapolation.</p><p>The editing experiments make the tradeoff more visible. Less input information gives the prompt more freedom, but also makes identity and subject preservation unreliable. Guidance sharpens the generic samples into convincing portraits without escaping the portrait preference. The anagrams and hybrids push this further: one result has to satisfy competing interpretations, and the weaker interpretation can remain ambiguous.</p></section>
+<p class="figure-note">Assignment: <a href="https://cal-cs180.github.io/fa26/hw/proj3-flow/parta.html">CS 180 · Project 3, Part A</a>.</p>
+</main>
+<footer class="site-footer"><p>Rishabh Athreya</p><p>CS 180 · Project 3 · Part A</p></footer>
+</div>
+</body>
+</html>
