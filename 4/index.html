@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f8f6f1"><meta name="description" content="Image warping and mosaicing with manually estimated homographies, image rectification, and three six-frame panoramas. Rishabh Athreya, CS 180 Project 4 Part A."><title>Project 4 · Image Warping and Mosaicing — Rishabh Athreya</title><style>
+:root { --paper:#f8f6f1; --ink:#191919; --muted:#696760; --rule:#d8d3c9; --blue:#315a8a; --selection:#dce7f2; }
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased; }
+::selection { background:var(--selection); }
+a { color:var(--blue); text-underline-offset:3px; }
+a:focus-visible, [tabindex]:focus-visible { outline:2px solid var(--blue); outline-offset:4px; }
+.page { width:min(100% - 2.5rem,48rem); margin-inline:auto; padding:2.25rem 0 2rem; }
+.site-header { display:flex; justify-content:space-between; align-items:center; gap:1.5rem; padding-bottom:1rem; border-bottom:1px solid var(--rule); }
+.name,.course-mark { font-size:.95rem; font-weight:650; letter-spacing:-.01em; }
+.name { color:inherit; text-decoration:none; }
+.name:hover { color:var(--blue); }
+.course-mark { color:var(--muted); }
+main { padding:clamp(3rem,8vw,4.5rem) 0 3rem; }
+.back-link { display:inline-block; margin-bottom:1.2rem; font-size:.8rem; font-weight:650; text-decoration:none; }
+h1 { margin:0; font-size:clamp(2.4rem,7vw,4rem); font-weight:600; letter-spacing:-.055em; line-height:1.08; text-wrap:balance; }
+.project-label { margin:0 0 1rem; color:var(--muted); font-size:.77rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+.project-subtitle { margin:1.5rem 0 2rem; color:var(--muted); max-width:40rem; }
+p { margin:1rem 0; }
+.setup { padding:1rem 0; border-top:1px solid var(--rule); border-bottom:1px solid var(--rule); font-size:.85rem; }
+.setup p { margin:.35rem 0; }
+.toc { margin-top:2rem; }
+.toc h2 { font-size:.77rem; text-transform:uppercase; letter-spacing:.1em; }
+.toc ol { list-style:none; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:.35rem 1.5rem; }
+.toc a { font-size:.82rem; text-decoration:none; }
+.toc a:hover { text-decoration:underline; }
+.results-section { margin-top:clamp(3rem,8vw,5rem); padding-top:2rem; border-top:1px solid var(--rule); scroll-margin-top:1.5rem; }
+h2 { margin:0 0 .5rem; font-size:1.35rem; font-weight:600; letter-spacing:-.025em; line-height:1.35; }
+h3 { margin:2rem 0 .5rem; font-size:1.05rem; font-weight:600; }
+.formula { margin:1.5rem 0; padding:1rem; border:1px solid var(--rule); text-align:center; font-family:"Cambria Math",Georgia,serif; font-size:1.1rem; overflow-x:auto; }
+.formula-note { font-family:inherit; font-size:.85rem; color:var(--muted); }
+.result { margin:1.5rem 0 2rem; min-width:0; }
+.figure-scroll { overflow-x:auto; background:white; border:1px solid var(--rule); }
+.result a { display:block; }
+.result img { display:block; width:100%; height:auto; }
+figcaption { margin-top:.65rem; color:var(--muted); text-align:center; font-size:.8rem; line-height:1.5; }
+.figure-note { color:var(--muted); font-size:.82rem; }
+.site-footer { display:flex; justify-content:space-between; gap:1rem; padding-top:1rem; border-top:1px solid var(--rule); color:var(--muted); font-size:.76rem; }
+.site-footer p { margin:0; }
+.skip-link { position:absolute; top:-5rem; left:1rem; padding:.5rem 1rem; background:var(--paper); z-index:1; }
+.skip-link:focus { top:1rem; }
+@media(max-width:36rem) {
+ .page { width:calc(100% - 2rem); padding-top:1.25rem; }
+ main { padding-top:2.5rem; }
+ .toc ol { grid-template-columns:1fr; gap:.5rem; }
+ .site-footer { flex-direction:column; gap:.15rem; }
+ .formula { font-size:1rem; }
+}
+@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+@media print {
+ @page { size:A4; margin:15mm; }
+ body { background:white; font-size:10pt; line-height:1.5; }
+ .page { width:100%; padding:0; }
+ main { padding-top:1.5rem; }
+ .skip-link,.back-link,.toc,.screen-note { display:none; }
+ h1 { font-size:30pt; }
+ h2 { font-size:16pt; }
+ h3 { font-size:12pt; }
+ h2,h3,.project-label,.prompt { break-after:avoid; }
+ p { orphans:3; widows:3; }
+ .results-section { margin-top:1.5rem; padding-top:1rem; }
+ .result,.formula,.hybrid-pair { break-inside:avoid; }
+ .result { margin:1rem 0 1.25rem; }
+ .figure-scroll { overflow:visible; }
+ .wide img { min-width:0; }
+ .result img { max-width:100%; }
+ a { color:inherit; text-decoration:none; }
+ figcaption { font-size:8pt; }
+ .site-footer { display:none; }
+}
+
+.result .figure-scroll { background:#eeeae2; }
+code,pre { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+code { font-size:.85em; }
+pre { overflow-x:auto; padding:1rem; background:#f0ede6; border:1px solid var(--rule); font-size:.75rem; line-height:1.65; tab-size:4; }
+.table-scroll { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:.83rem; margin:1rem 0; font-variant-numeric:tabular-nums; }
+caption { text-align:left; color:var(--muted); margin-bottom:.5rem; }
+th,td { padding:.65rem .6rem; text-align:left; border-bottom:1px solid var(--rule); }
+th { font-weight:600; }
+.matrix-label { font-size:.8rem; color:var(--muted); margin-bottom:0; }
+.gallery-entry { margin:2rem 0 3rem; }
+.gallery-entry h3 { margin-top:0; }
+.downloads { display:flex; flex-wrap:wrap; gap:.5rem 1.2rem; font-size:.8rem; }
+@media(max-width:36rem) { pre { font-size:.65rem; } }
+@media print { pre { font-size:7pt; white-space:pre-wrap; overflow:visible; } .table-scroll { overflow:visible; } .gallery-entry { break-inside:avoid; } .downloads { display:none; } }
+</style></head>
+<body><a class="skip-link" href="#main">Skip to content</a><div class="page"><header class="site-header"><a class="name" href="../index.html">Rishabh Athreya</a><span class="course-mark">CS 180</span></header><main id="main"><a class="back-link" href="../index.html">← All projects</a><p class="project-label">Project 4 · Part A · Fall 2026</p><h1>Image Warping<br>and Mosaicing</h1><p class="project-subtitle">From overlapping photographs to a shared perspective. I estimate homographies from manual correspondences, compare two ways of resampling an image, and combine six frames at a time into three panoramas.</p>
+<div class="setup"><p><strong>18 photographs · 15 pairwise homographies · 2 rectifications · 3 mosaics</strong></p><p>Apartment, Wheeler, and Gateway. All point coordinates and homography estimates use 750 × 1000 input images.</p></div>
+<nav class="toc" aria-label="On this page"><h2>On this page</h2><ol><li><a href="#pictures">A.1 · Shoot the pictures</a></li><li><a href="#homographies">A.2 · Recover homographies</a></li><li><a href="#warping">A.3 · Warp and rectify</a></li><li><a href="#mosaics">A.4 · Blend the mosaics</a></li><li><a href="#reflection">Observations and limitations</a></li><li><a href="#correspondences">All correspondences and matrices</a></li></ol></nav>
+<section class="results-section" id="pictures"><h2>A.1 · Shoot the pictures</h2><p>I use three sequences of six overlapping photographs: an apartment interior, the exterior of Wheeler, and the interior of Gateway. Each sequence sweeps across the scene. The intended model is camera rotation about a fixed center of projection, so overlapping views can be related by a homography. In practice, nearby objects and people make the indoor scenes less forgiving of small viewpoint changes.</p><p>The processing pipeline corrects image orientation, converts to RGB, and resizes each frame to 750 × 1000. The grids below show all six working images in their numbered order; these same frames form the mosaics in A.4.</p>
+<h3 id="sources-apartment">Apartment · six source photographs</h3><p>Furniture, door frames, and wall details provide landmarks across the room.</p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/apartment_sources.png" aria-label="Open full-size: Apartment: images 1–6, read left to right across the top row, then the bottom row."><img src="../media/project4/apartment_sources.png" width="1680" height="1400" alt="Apartment: images 1–6, read left to right across the top row, then the bottom row." loading="lazy" decoding="async"></a></div><figcaption>Apartment: images 1–6, read left to right across the top row, then the bottom row.</figcaption></figure>
+<h3 id="sources-wheeler">Wheeler · six source photographs</h3><p>Repeated window corners and building edges provide correspondences across the exterior views.</p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/wheeler_sources.png" aria-label="Open full-size: Wheeler: images 1–6, read left to right across the top row, then the bottom row."><img src="../media/project4/wheeler_sources.png" width="1680" height="1400" alt="Wheeler: images 1–6, read left to right across the top row, then the bottom row." loading="lazy" decoding="async"></a></div><figcaption>Wheeler: images 1–6, read left to right across the top row, then the bottom row.</figcaption></figure>
+<h3 id="sources-gateway">Gateway · six source photographs</h3><p>Ceiling features, window frames, and interior fixtures provide landmarks, with nearby furniture and moving people adding difficulty.</p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/gateway_sources.png" aria-label="Open full-size: Gateway: images 1–6, read left to right across the top row, then the bottom row."><img src="../media/project4/gateway_sources.png" width="1680" height="1400" alt="Gateway: images 1–6, read left to right across the top row, then the bottom row." loading="lazy" decoding="async"></a></div><figcaption>Gateway: images 1–6, read left to right across the top row, then the bottom row.</figcaption></figure>
+</section><section class="results-section" id="homographies"><h2>A.2 · Recover homographies</h2><p>I manually specify matching landmarks for each neighboring pair: 1 → 2, 2 → 3, 3 → 4, 4 → 5, and 5 → 6. Each pair uses 8–14 correspondences, giving more constraints than the minimum of four. The function <code>computeH(im1_pts, im2_pts)</code> estimates the transformation from the first image’s coordinates to the second image’s coordinates.</p><h3>From point matches to a linear system</h3><p>For a source point (x, y) and destination point (u, v), the homogeneous mapping is p′ ∼ Hp. Fixing h₃₃ = 1 leaves eight unknowns. Dividing by the homogeneous scale gives:</p><div class="formula">u = (h₁₁x + h₁₂y + h₁₃) / (h₃₁x + h₃₂y + 1)<br>v = (h₂₁x + h₂₂y + h₂₃) / (h₃₁x + h₃₂y + 1)</div><p>Rearranging gives two rows per point pair. Stacking N pairs produces a 2N × 8 system A h = b:</p>
+<pre tabindex="0">[ x  y  1  0  0  0  −ux  −uy ] h = u
+[ 0  0  0  x  y  1  −vx  −vy ] h = v
+
+h = [h₁₁ h₁₂ h₁₃ h₂₁ h₂₂ h₂₃ h₃₁ h₃₂]ᵀ</pre>
+<p>Before solving, I center each point set and scale it so the mean distance from its center is √2. I solve the normalized system with least squares, then recover the original coordinate mapping as H = T₂⁻¹ Hₙ T₁ and normalize the bottom-right entry to 1. This improves numerical conditioning when coordinate products are much larger than the constant terms.</p><h3>A concrete example · Apartment 1 → 2</h3><p>The first selected match is (383, 214) → (93, 221). Its two rows are:</p>
+<pre tabindex="0">[383 214 1   0   0 0 −35619 −19902] h = 93
+[  0   0 0 383 214 1 −84643 −47294] h = 221</pre>
+<p>Nine matches form an 18 × 8 system. The recovered homography below maps Apartment image 1 into image 2.</p>
+<pre tabindex="0">[[   1.49493     0.053817 -466.771475]
+ [   0.280345    1.320866 -112.245354]
+ [   0.000692   -0.000017    1.      ]]</pre>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/apartment_matches_1_2.png" aria-label="Open full-size: Apartment 1 → 2 · 9 matches · reprojection RMSE 1.012 px."><img src="../media/project4/apartment_matches_1_2.png" width="1400" height="980" alt="Apartment source and reference with numbered manual landmarks; red crosses mark projected source points." loading="lazy" decoding="async"></a></div><figcaption>Apartment 1 → 2 · 9 matches · reprojection RMSE 1.012 px.</figcaption></figure>
+<p>Numbered circles show the manual point pairs; red crosses on the reference image show the projected source points. I measure fit using the root mean squared Euclidean distance between these projections and the selected targets. This measures agreement at the annotated points, not error throughout the entire mosaic.</p><div class="table-scroll"><table><caption>Pairwise reprojection RMSE, in pixels at 750 × 1000</caption><thead><tr><th scope="col">Scene</th><th scope="col">1 → 2</th><th scope="col">2 → 3</th><th scope="col">3 → 4</th><th scope="col">4 → 5</th><th scope="col">5 → 6</th></tr></thead><tbody>
+<tr><th scope="row">Apartment</th><td>1.012</td><td>1.513</td><td>2.464</td><td>1.543</td><td>1.164</td></tr>
+<tr><th scope="row">Wheeler</th><td>2.206</td><td>3.380</td><td>4.238</td><td>2.123</td><td>1.605</td></tr>
+<tr><th scope="row">Gateway</th><td>11.172</td><td>2.312</td><td>8.600</td><td>4.161</td><td>3.563</td></tr>
+</tbody></table></div><p>Gateway has the largest residuals, especially for 1 → 2 (11.172 px) and 3 → 4 (8.600 px). Those fits are less consistent with a single projective mapping than the other pairs. Approximate manual landmarks and depth-dependent parallax are possible contributors.</p><p><a href="#correspondences">See all 15 correspondence plots and recovered matrices</a>, or inspect the <a href="../media/project4/results.txt">complete numerical results, including every A and b</a>.</p></section>
+<section class="results-section" id="warping"><h2>A.3 · Warp and rectify</h2><p>I implement <code>warpImageNearestNeighbor(im, H)</code> and <code>warpImageBilinear(im, H)</code> using inverse warping. For each output pixel, I apply H⁻¹ and divide by the resulting homogeneous coordinate to find a floating-point source location. Sampling this way fills the destination grid without the holes that forward placement can leave.</p><p>For an unrestricted warp, the transformed image corners determine the output bounds. A separate validity mask records whether each mapped location lies inside the source. This preserves genuinely black image pixels while keeping uncovered areas transparent. For rectification, I instead specify the output rectangle directly.</p><h3>Two interpolation methods</h3><p><strong>Nearest neighbor</strong> rounds each valid coordinate to the closest source pixel. <strong>Bilinear interpolation</strong> combines the four surrounding pixels according to the fractional horizontal and vertical offsets. Both are implemented directly in NumPy.</p><div class="formula">I(x, y) = (1 − α)(1 − β) I₀₀ + α(1 − β) I₁₀<br>+ (1 − α)β I₀₁ + αβ I₁₁</div><p class="figure-note">Here α = x − ⌊x⌋ and β = y − ⌊y⌋. Neighbor indices are clamped at the image boundary.</p>
+<h3>Laptop display · 600 × 375</h3><p>I select the four corners in Gateway image 1 and map them to a 600 × 375 rectangle. The 16:10 aspect ratio is assumed rather than physically measured. The rectification makes the selected plane front-facing under that assumption.</p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/laptop_display_comparison.png" aria-label="Open full-size: Laptop display: original with selected corners, nearest-neighbor result, and bilinear result."><img src="../media/project4/laptop_display_comparison.png" width="1950" height="900" alt="Laptop display: original with selected corners, nearest-neighbor result, and bilinear result." loading="lazy" decoding="async"></a></div><figcaption>Laptop display: original with selected corners, nearest-neighbor result, and bilinear result.</figcaption></figure>
+<p class="matrix-label">Selected corners, in top-left → top-right → bottom-right → bottom-left order</p>
+<pre tabindex="0">[[362, 586], [569, 588], [599, 733], [377, 743]]</pre>
+<p class="figure-note">Destination corners: (0, 0), (599, 0), (599, 374), (0, 374).</p>
+<p class="matrix-label">Recovered rectification homography</p>
+<pre tabindex="0">[[    3.394419    -0.324308 -1038.735313]
+ [   -0.031549     3.265346 -1902.071968]
+ [   -0.000445     0.000723     1.      ]]</pre>
+<div class="downloads"><a href="../media/project4/laptop_display_nearest.png">Full-size nearest neighbor ↗</a><a href="../media/project4/laptop_display_bilinear.png">Full-size bilinear ↗</a></div>
+<h3>Window panel · 240 × 600</h3><p>I select the four corners in Gateway image 4 and map them to a 240 × 600 rectangle. The 2:5 aspect ratio is assumed rather than physically measured. The rectification makes the selected plane front-facing under that assumption.</p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/window_panel_comparison.png" aria-label="Open full-size: Window panel: original with selected corners, nearest-neighbor result, and bilinear result."><img src="../media/project4/window_panel_comparison.png" width="1950" height="900" alt="Window panel: original with selected corners, nearest-neighbor result, and bilinear result." loading="lazy" decoding="async"></a></div><figcaption>Window panel: original with selected corners, nearest-neighbor result, and bilinear result.</figcaption></figure>
+<p class="matrix-label">Selected corners, in top-left → top-right → bottom-right → bottom-left order</p>
+<pre tabindex="0">[[25, 238], [127, 247], [129, 496], [25, 497]]</pre>
+<p class="figure-note">Destination corners: (0, 0), (239, 0), (239, 599), (0, 599).</p>
+<p class="matrix-label">Recovered rectification homography</p>
+<pre tabindex="0">[[   2.273614   -0.        -56.840362]
+ [  -0.21015     2.381703 -561.591603]
+ [  -0.000388    0.00008     1.      ]]</pre>
+<div class="downloads"><a href="../media/project4/window_panel_nearest.png">Full-size nearest neighbor ↗</a><a href="../media/project4/window_panel_bilinear.png">Full-size bilinear ↗</a></div>
+<h3>Quality and runtime</h3><p>The laptop display exposes the sampling trade-off in small text and thin lines: nearest neighbor retains harder pixel transitions, while bilinear interpolation blends them into a softer result. The window rectification similarly lets me compare the diagonal building edges. At page size the difference is subtle; the full-size outputs make it easier to inspect. Neither method can recover detail absent from the source photograph.</p><div class="table-scroll"><table><caption>Saved single-run timings for the rectification warps</caption><thead><tr><th scope="col">Image</th><th scope="col">Output</th><th scope="col">Nearest</th><th scope="col">Bilinear</th><th scope="col">Time ratio</th></tr></thead><tbody><tr><th scope="row">Laptop display</th><td>600 × 375</td><td>7.70 ms</td><td>24.75 ms</td><td>3.21×</td></tr><tr><th scope="row">Window panel</th><td>240 × 600</td><td>4.79 ms</td><td>14.99 ms</td><td>3.13×</td></tr></tbody></table></div><p>Bilinear interpolation costs about three times as much in these two recorded runs because it gathers and weights four neighbors. These are individual measurements, not averaged benchmarks. I use bilinear sampling for the final mosaics to reduce abrupt sampling artifacts.</p></section>
+<section class="results-section" id="mosaics"><h2>A.4 · Blend the images into a mosaic</h2><p>Each panorama uses all six frames from its source sequence. I first compose the adjacent homographies into image 3’s coordinate system. Images 1 and 2 use forward compositions; images 4–6 use inverse adjacent transformations. For example, H₁→₃ = H₂→₃ H₁→₂ and H₄→₃ = H₃→₄⁻¹.</p><h3>Choose a common canvas</h3><p>I apply one additional projective transform to the entire scene, centered at (375, 500), to reduce extreme canvas stretching. Its two perspective parameters are selected separately for each scene. This is still a planar projective mosaic, not a cylindrical or spherical projection.</p>
+<pre tabindex="0">C = [1 0 −375; 0 1 −500; 0 0 1]
+P = C⁻¹ [1 0 0; 0 1 0; a b 1] C
+
+Apartment: (a, b) = ( 0.00012,  0.00000)
+Wheeler:   (a, b) = (−0.00010, −0.00005)
+Gateway:   (a, b) = (−0.00025, −0.00012)</pre>
+<p>The union of the transformed corner bounds defines the canvas. A common scale brings its longer side to approximately 3000 pixels. Each resized source frame is inverse-warped directly into that final canvas, so the process avoids repeatedly resampling an intermediate mosaic.</p><h3>Feather the overlaps</h3><p>I assign each source pixel a positive weight based on its distance to the closest image edge, normalized by the largest weight in that image. A one-pixel floor keeps boundary weights nonzero. The color image and its weight map are warped with the same homography, then the validity mask removes samples outside the source.</p><div class="formula">M(p) = Σᵢ wᵢ(p) Iᵢ(p) / Σᵢ wᵢ(p)</div><p>Where images overlap, their contributions change gradually. Where only one image contributes, normalization preserves its color. Pixels with no coverage remain transparent. Feathering softens seams; it cannot correct a misplaced edge or a moving subject.</p>
+<h3>Apartment · six-image mosaic</h3><p><a href="#sources-apartment">View the six source images ↑</a></p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/apartment_mosaic.png" aria-label="Open full-size: Apartment · 3001 × 2159 output · bilinear resampling and feather blending."><img src="../media/project4/apartment_mosaic.png" width="3001" height="2159" alt="Six-image apartment panorama with the full projective footprint and transparent uncovered regions." loading="lazy" decoding="async"></a></div><figcaption>Apartment · 3001 × 2159 output · bilinear resampling and feather blending.</figcaption></figure>
+<p>The panorama joins the kitchen counter, rear wall, and seating area into one view. The outer frames stretch substantially, and doubled detail remains around the foreground table and people. The nearby objects are particularly sensitive to changes in camera position.</p>
+<h3>Wheeler · six-image mosaic</h3><p><a href="#sources-wheeler">View the six source images ↑</a></p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/wheeler_mosaic.png" aria-label="Open full-size: Wheeler · 3001 × 1993 output · bilinear resampling and feather blending."><img src="../media/project4/wheeler_mosaic.png" width="3001" height="1993" alt="Six-image wheeler panorama with the full projective footprint and transparent uncovered regions." loading="lazy" decoding="async"></a></div><figcaption>Wheeler · 3001 × 1993 output · bilinear resampling and feather blending.</figcaption></figure>
+<p>The building remains recognizable across the center, while the sky and foreground expand toward the outer frames. The broad uncovered wedges show the footprint of the projective warps. The darker band through part of the sky also makes the limits of simple feathering visible.</p>
+<h3>Gateway · six-image mosaic</h3><p><a href="#sources-gateway">View the six source images ↑</a></p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/gateway_mosaic.png" aria-label="Open full-size: Gateway · 3001 × 1832 output · bilinear resampling and feather blending."><img src="../media/project4/gateway_mosaic.png" width="3001" height="1832" alt="Six-image gateway panorama with the full projective footprint and transparent uncovered regions." loading="lazy" decoding="async"></a></div><figcaption>Gateway · 3001 × 1832 output · bilinear resampling and feather blending.</figcaption></figure>
+<p>The ceiling, windows, and seating area connect across a much wider view than any source frame. Some interior edges and people appear doubled. This is consistent with the larger pairwise residuals: blending spreads a mismatch across the overlap but does not remove it.</p>
+</section><section class="results-section" id="reflection"><h2>Observations and limitations</h2><p>Rectification provides a direct check of the homography and inverse-warping implementation: a selected quadrilateral becomes the requested rectangle. The interpolation comparison then separates geometry from sampling quality.</p><p>Mosaicing introduces a different challenge. Small pairwise errors accumulate through the six-frame chain, and a single homography cannot align every depth plane if the camera translates. The full, uncropped results make both the shared coverage and the strong outer-frame stretching visible. More accurate stationary landmarks and a more stable capture position would improve alignment; a different projection would address the appearance of very wide views.</p><p>This report covers A.1–A.4. No spherical, cylindrical, or polar-mapping extension is included for A.5.</p></section>
+<section class="results-section" id="correspondences"><h2>All correspondences and recovered matrices</h2><p>The complete pairwise record is below. Every H maps image i to image i + 1 at 750 × 1000 resolution, before composition into the final canvas. Circles are manually selected points; red crosses are the source points projected into the reference. Select any figure to inspect it at full resolution.</p>
+<article class="gallery-entry"><h3>Apartment · 1 → 2</h3><p class="figure-note">9 correspondences · 18 × 8 system · RMSE 1.012 px</p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/apartment_matches_1_2.png" aria-label="Open full-size: Apartment: image 1 (source) and image 2 (reference)."><img src="../media/project4/apartment_matches_1_2.png" width="1400" height="980" alt="Apartment: image 1 (source) and image 2 (reference)." loading="lazy" decoding="async"></a></div><figcaption>Apartment: image 1 (source) and image 2 (reference).</figcaption></figure>
+<pre tabindex="0">H =
+[[   1.49493     0.053817 -466.771475]
+ [   0.280345    1.320866 -112.245354]
+ [   0.000692   -0.000017    1.      ]]</pre>
+</article>
+<article class="gallery-entry"><h3>Apartment · 2 → 3</h3><p class="figure-note">9 correspondences · 18 × 8 system · RMSE 1.513 px</p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/apartment_matches_2_3.png" aria-label="Open full-size: Apartment: image 2 (source) and image 3 (reference)."><img src="../media/project4/apartment_matches_2_3.png" width="1400" height="980" alt="Apartment: image 2 (source) and image 3 (reference)." loading="lazy" decoding="async"></a></div><figcaption>Apartment: image 2 (source) and image 3 (reference).</figcaption></figure>
+<pre tabindex="0">H =
+[[   1.430848    0.007469 -368.026104]
+ [   0.291911    1.222485 -105.555282]
+ [   0.000612   -0.00007     1.      ]]</pre>
+</article>
+<article class="gallery-entry"><h3>Apartment · 3 → 4</h3><p class="figure-note">9 correspondences · 18 × 8 system · RMSE 2.464 px</p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/apartment_matches_3_4.png" aria-label="Open full-size: Apartment: image 3 (source) and image 4 (reference)."><img src="../media/project4/apartment_matches_3_4.png" width="1400" height="980" alt="Apartment: image 3 (source) and image 4 (reference)." loading="lazy" decoding="async"></a></div><figcaption>Apartment: image 3 (source) and image 4 (reference).</figcaption></figure>
+<pre tabindex="0">H =
+[[   1.394377   -0.01651  -319.724404]
+ [   0.298983    1.21604  -116.375136]
+ [   0.000585   -0.000086    1.      ]]</pre>
+</article>
+<article class="gallery-entry"><h3>Apartment · 4 → 5</h3><p class="figure-note">9 correspondences · 18 × 8 system · RMSE 1.543 px</p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/apartment_matches_4_5.png" aria-label="Open full-size: Apartment: image 4 (source) and image 5 (reference)."><img src="../media/project4/apartment_matches_4_5.png" width="1400" height="980" alt="Apartment: image 4 (source) and image 5 (reference)." loading="lazy" decoding="async"></a></div><figcaption>Apartment: image 4 (source) and image 5 (reference).</figcaption></figure>
+<pre tabindex="0">H =
+[[   1.278693    0.009304 -252.51269 ]
+ [   0.175479    1.130355  -50.54861 ]
+ [   0.000404   -0.00006     1.      ]]</pre>
+</article>
+<article class="gallery-entry"><h3>Apartment · 5 → 6</h3><p class="figure-note">8 correspondences · 16 × 8 system · RMSE 1.164 px</p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/apartment_matches_5_6.png" aria-label="Open full-size: Apartment: image 5 (source) and image 6 (reference)."><img src="../media/project4/apartment_matches_5_6.png" width="1400" height="980" alt="Apartment: image 5 (source) and image 6 (reference)." loading="lazy" decoding="async"></a></div><figcaption>Apartment: image 5 (source) and image 6 (reference).</figcaption></figure>
+<pre tabindex="0">H =
+[[   1.283857    0.016046 -239.971851]
+ [   0.193723    1.172426  -80.73442 ]
+ [   0.000405   -0.000028    1.      ]]</pre>
+</article>
+<article class="gallery-entry"><h3>Wheeler · 1 → 2</h3><p class="figure-note">14 correspondences · 28 × 8 system · RMSE 2.206 px</p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/wheeler_matches_1_2.png" aria-label="Open full-size: Wheeler: image 1 (source) and image 2 (reference)."><img src="../media/project4/wheeler_matches_1_2.png" width="1400" height="980" alt="Wheeler: image 1 (source) and image 2 (reference)." loading="lazy" decoding="async"></a></div><figcaption>Wheeler: image 1 (source) and image 2 (reference).</figcaption></figure>
+<pre tabindex="0">H =
+[[  0.599966  -0.014178 323.676122]
+ [ -0.273909   0.837978  87.26634 ]
+ [ -0.000502  -0.000062   1.      ]]</pre>
+</article>
+<article class="gallery-entry"><h3>Wheeler · 2 → 3</h3><p class="figure-note">13 correspondences · 26 × 8 system · RMSE 3.380 px</p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/wheeler_matches_2_3.png" aria-label="Open full-size: Wheeler: image 2 (source) and image 3 (reference)."><img src="../media/project4/wheeler_matches_2_3.png" width="1400" height="980" alt="Wheeler: image 2 (source) and image 3 (reference)." loading="lazy" decoding="async"></a></div><figcaption>Wheeler: image 2 (source) and image 3 (reference).</figcaption></figure>
+<pre tabindex="0">H =
+[[  0.641742   0.051617 271.543037]
+ [ -0.263761   0.928372  37.838533]
+ [ -0.000516   0.000067   1.      ]]</pre>
+</article>
+<article class="gallery-entry"><h3>Wheeler · 3 → 4</h3><p class="figure-note">12 correspondences · 24 × 8 system · RMSE 4.238 px</p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/wheeler_matches_3_4.png" aria-label="Open full-size: Wheeler: image 3 (source) and image 4 (reference)."><img src="../media/project4/wheeler_matches_3_4.png" width="1400" height="980" alt="Wheeler: image 3 (source) and image 4 (reference)." loading="lazy" decoding="async"></a></div><figcaption>Wheeler: image 3 (source) and image 4 (reference).</figcaption></figure>
+<pre tabindex="0">H =
+[[  0.642343  -0.019741 278.544507]
+ [ -0.218626   0.86059   71.16917 ]
+ [ -0.000446  -0.000033   1.      ]]</pre>
+</article>
+<article class="gallery-entry"><h3>Wheeler · 4 → 5</h3><p class="figure-note">14 correspondences · 28 × 8 system · RMSE 2.123 px</p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/wheeler_matches_4_5.png" aria-label="Open full-size: Wheeler: image 4 (source) and image 5 (reference)."><img src="../media/project4/wheeler_matches_4_5.png" width="1400" height="980" alt="Wheeler: image 4 (source) and image 5 (reference)." loading="lazy" decoding="async"></a></div><figcaption>Wheeler: image 4 (source) and image 5 (reference).</figcaption></figure>
+<pre tabindex="0">H =
+[[  0.642646   0.005874 327.235885]
+ [ -0.272754   0.871527  59.960028]
+ [ -0.000509  -0.000007   1.      ]]</pre>
+</article>
+<article class="gallery-entry"><h3>Wheeler · 5 → 6</h3><p class="figure-note">11 correspondences · 22 × 8 system · RMSE 1.605 px</p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/wheeler_matches_5_6.png" aria-label="Open full-size: Wheeler: image 5 (source) and image 6 (reference)."><img src="../media/project4/wheeler_matches_5_6.png" width="1400" height="980" alt="Wheeler: image 5 (source) and image 6 (reference)." loading="lazy" decoding="async"></a></div><figcaption>Wheeler: image 5 (source) and image 6 (reference).</figcaption></figure>
+<pre tabindex="0">H =
+[[  0.85761   -0.013173 186.558077]
+ [ -0.16057    0.881245  65.296646]
+ [ -0.00019   -0.000032   1.      ]]</pre>
+</article>
+<article class="gallery-entry"><h3>Gateway · 1 → 2</h3><p class="figure-note">10 correspondences · 20 × 8 system · RMSE 11.172 px</p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/gateway_matches_1_2.png" aria-label="Open full-size: Gateway: image 1 (source) and image 2 (reference)."><img src="../media/project4/gateway_matches_1_2.png" width="1400" height="980" alt="Gateway: image 1 (source) and image 2 (reference)." loading="lazy" decoding="async"></a></div><figcaption>Gateway: image 1 (source) and image 2 (reference).</figcaption></figure>
+<pre tabindex="0">H =
+[[  0.533682   0.078123 229.47974 ]
+ [ -0.343872   0.835209 118.589309]
+ [ -0.000638   0.000044   1.      ]]</pre>
+</article>
+<article class="gallery-entry"><h3>Gateway · 2 → 3</h3><p class="figure-note">9 correspondences · 18 × 8 system · RMSE 2.312 px</p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/gateway_matches_2_3.png" aria-label="Open full-size: Gateway: image 2 (source) and image 3 (reference)."><img src="../media/project4/gateway_matches_2_3.png" width="1400" height="980" alt="Gateway: image 2 (source) and image 3 (reference)." loading="lazy" decoding="async"></a></div><figcaption>Gateway: image 2 (source) and image 3 (reference).</figcaption></figure>
+<pre tabindex="0">H =
+[[  0.92509    0.009549 261.576479]
+ [ -0.087189   1.011274  -4.863733]
+ [ -0.000192   0.000083   1.      ]]</pre>
+</article>
+<article class="gallery-entry"><h3>Gateway · 3 → 4</h3><p class="figure-note">10 correspondences · 20 × 8 system · RMSE 8.600 px</p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/gateway_matches_3_4.png" aria-label="Open full-size: Gateway: image 3 (source) and image 4 (reference)."><img src="../media/project4/gateway_matches_3_4.png" width="1400" height="980" alt="Gateway: image 3 (source) and image 4 (reference)." loading="lazy" decoding="async"></a></div><figcaption>Gateway: image 3 (source) and image 4 (reference).</figcaption></figure>
+<pre tabindex="0">H =
+[[  0.71243    0.006159 296.453283]
+ [ -0.2108     0.964073  46.966159]
+ [ -0.000408   0.000027   1.      ]]</pre>
+</article>
+<article class="gallery-entry"><h3>Gateway · 4 → 5</h3><p class="figure-note">8 correspondences · 16 × 8 system · RMSE 4.161 px</p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/gateway_matches_4_5.png" aria-label="Open full-size: Gateway: image 4 (source) and image 5 (reference)."><img src="../media/project4/gateway_matches_4_5.png" width="1400" height="980" alt="Gateway: image 4 (source) and image 5 (reference)." loading="lazy" decoding="async"></a></div><figcaption>Gateway: image 4 (source) and image 5 (reference).</figcaption></figure>
+<pre tabindex="0">H =
+[[  0.739518  -0.16214  263.052399]
+ [ -0.187943   0.710165  93.490484]
+ [ -0.000251  -0.000284   1.      ]]</pre>
+</article>
+<article class="gallery-entry"><h3>Gateway · 5 → 6</h3><p class="figure-note">8 correspondences · 16 × 8 system · RMSE 3.563 px</p>
+<figure class="result"><div class="figure-scroll"><a href="../media/project4/gateway_matches_5_6.png" aria-label="Open full-size: Gateway: image 5 (source) and image 6 (reference)."><img src="../media/project4/gateway_matches_5_6.png" width="1400" height="980" alt="Gateway: image 5 (source) and image 6 (reference)." loading="lazy" decoding="async"></a></div><figcaption>Gateway: image 5 (source) and image 6 (reference).</figcaption></figure>
+<pre tabindex="0">H =
+[[  0.827445  -0.065352 333.993652]
+ [ -0.122839   0.970443  15.265479]
+ [ -0.00033    0.000034   1.      ]]</pre>
+</article>
+<p><a href="../media/project4/results.txt">Complete numerical record ↗</a> · All linear systems, pairwise and final-view transforms, canvas bounds, and recorded timings.</p></section><p class="figure-note">Assignment: <a href="https://cal-cs180.github.io/fa26/hw/proj3/partA.html">CS 180 · Project 4, Part A: Image Warping and Mosaicing</a>.</p></main><footer class="site-footer"><p>Rishabh Athreya</p><p>CS 180 · Project 4 · Part A</p></footer></div></body></html>
